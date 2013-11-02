@@ -1,0 +1,10 @@
+{
+  "ternjs": {
+    "exclude": ["wordpress/**", "node_modules/**"],
+    "libs": ["browser", "ecma5"],
+    "plugins": {
+      "node" : {},
+      "requirejs": {}
+    }
+  }
+}
