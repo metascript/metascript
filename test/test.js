@@ -1,4 +1,4 @@
-var Meta = (require('./meta'))();
+var Meta = (require('../lib/meta'))();
 var should = require('should');
 
 var parse_string = function(s) {

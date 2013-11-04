@@ -1,0 +1,33 @@
+{
+  "name": "metascript",
+  "version": "0.0.1",
+  "author": "Massimiliano Mantione <massimiliano.mantione@gmail.com>",
+  "description": "A language with a compiler that targets Javascript.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/massimiliano-mantione/metascript.git"
+  },
+  "main": "./lib/meta",
+  "bin": {
+    "metascript": "./lib/metascript"
+  },
+  "dependencies": {
+    "escodegen": ">=0.0.28"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "~2.0.2"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "compiler",
+    "language",
+    "metaprogramming"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.8"
+  }
+}
