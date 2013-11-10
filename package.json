@@ -21,6 +21,29 @@
   "scripts": {
     "test": "mocha"
   },
+  "jshintConfig": {
+    "globals": {},
+    "browser":   false,
+    "node":      true,
+    "strict":    false,
+    "white":     true,
+    "smarttabs": true,
+    "undef":     true,
+    "unused":    true,
+    "onecase":   true,
+    "lastsemic": true,
+    "newcap":    false,
+    "maxlen":    100,
+    "indent":    2,
+    "predef": [
+      "describe",
+      "it",
+      "before",
+      "beforeEach",
+      "after",
+      "afterEach"
+    ]
+  },
   "keywords": [
     "compiler",
     "language",

@@ -1,17 +1,17 @@
 var Meta = (require('../lib/meta'))();
 var should = require('should');
 
-var parse_string = function(s) {
+var parse_string = function (s) {
   var compiler = Meta.compiler_from_string(s);
   compiler.parse();
   return compiler;
 };
 
-var parse_array = function(a) {
+var parse_array = function (a) {
   return parse_string(a.join('\n'));
 };
 
-var compare_array_dump = function(a, expected, errors) {
+var compare_array_dump = function (a, expected, errors) {
   var compiler = parse_array(a);
   if (typeof errors === 'undefined') { errors = []; }
   compiler.should.have.property('errors').with.lengthOf(errors.length);
@@ -36,75 +36,75 @@ var compare_array_dump = function(a, expected, errors) {
   }
 };
 
-describe("Meta.Compiler", function() {
-  describe("#parse()", function() {
-    it('Should parse symbols and values', function() {
+describe("Meta.Compiler", function () {
+  describe("#parse()", function () {
+    it('Should parse symbols and values', function () {
       compare_array_dump([
         'print "Hello!"'
-      ],'(b (l id:"print" val:"Hello!"))');
+      ], '(b (l id:"print" val:"Hello!"))');
 
       compare_array_dump([
         'print 42'
-      ],'(b (l id:"print" val:42))');
+      ], '(b (l id:"print" val:42))');
 
       compare_array_dump([
         'print 42.0 .42 -42 4.2e12 2.4e-12'
-      ],'(b (l id:"print" val:42 val:0.42 val:-42 val:4200000000000 val:2.4e-12))');
+      ], '(b (l id:"print" val:42 val:0.42 val:-42 val:4200000000000 val:2.4e-12))');
 
       compare_array_dump([
         'print _12312 $_q12'
-      ],'(b (l id:"print" id:"_12312" id:"$_q12"))');
+      ], '(b (l id:"print" id:"_12312" id:"$_q12"))');
 
       compare_array_dump([
         'print "a\\x20\\040z"'
-      ],'(b (l id:"print" val:"a  z"))');
+      ], '(b (l id:"print" val:"a  z"))');
 
       compare_array_dump([
         'print "\\n\\t" "xy\\uaBcDz" ""'
-      ],'(b (l id:"print" val:"\n\t" val:"xy\uaBcDz" val:""))');
+      ], '(b (l id:"print" val:"\n\t" val:"xy\uaBcDz" val:""))');
 
       compare_array_dump([
         'print """END\n1\n2\n3\nEND\nok'
-      ],'(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
+      ], '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
 
       compare_array_dump([
         'print """\n1\n2\n3\n"""\nok'
-      ],'(b (l id:"print" val:"123") (l id:"ok"))');
+      ], '(b (l id:"print" val:"123") (l id:"ok"))');
 
       compare_array_dump([
         "print '''END\n1\n2\n3\nEND\nok"
-      ],'(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
+      ], '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
 
       compare_array_dump([
         "print '''\n1\n2\n3\n'''\nok"
-      ],'(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
+      ], '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
     });
 
-    it('Should parse symbols and operators', function() {
+    it('Should parse symbols and operators', function () {
       compare_array_dump([
         'a + b *** !@# @$d.k.abc'
-      ],'(b (l id:"a" op:"+" id:"b" op:"***" op:"!@#" op:"@" id:"$d" op:"." id:"k" op:"." id:"abc"))');
+      ], '(b (l id:"a" op:"+" id:"b" op:"***" op:"!@#" op:"@" id:"$d" op:"." id:"k" op:"." id:"abc"))');
 
       compare_array_dump([
         'a <== b <!> -> _\\$/z'
-      ],'(b (l id:"a" op:"<==" id:"b" op:"<!>" op:"->" id:"_" op:"\\" id:"$" op:"/" id:"z"))');
+      ], '(b (l id:"a" op:"<==" id:"b" op:"<!>" op:"->" id:"_" op:"\\" id:"$" op:"/" id:"z"))');
     });
 
-    it('Should parse blocks', function() {
+    it('Should parse blocks', function () {
       compare_array_dump([
         'a (b c)'
-      ],'(b (l id:"a" ((c id:"b" id:"c"))))');
+      ], '(b (l id:"a" ((c id:"b" id:"c"))))');
 
       compare_array_dump([
         'a {b [d e] c}'
-      ],'(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
+      ], '(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
 
       compare_array_dump([
         'a (',
         '  b',
         '  c',
         ')'
-      ],'(b (l id:"a" ((b (l id:"b") (l id:"c")))))');
+      ], '(b (l id:"a" ((b (l id:"b") (l id:"c")))))');
 
       compare_array_dump([
         'l1a',
@@ -115,7 +115,7 @@ describe("Meta.Compiler", function() {
         '    l3a',
         '    l3b',
         'l1b'
-      ],'(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +
+      ], '(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +
         '(l id:"l3b1" id:"l3b2"))) (l id:"l2b" (b (l id:"l3a") (l id:"l3b"))))) (l id:"l1b"))');
 
       compare_array_dump([
@@ -125,17 +125,17 @@ describe("Meta.Compiler", function() {
         'l1b',
         '  l2c',
         '  l2d'
-      ],'(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
+      ], '(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
     });
 
-    it('Should ignore comments and literate strings', function() {
+    it('Should ignore comments and literate strings', function () {
       compare_array_dump([
         'a (b c) ; Hello!'
-      ],'(b (l id:"a" ((c id:"b" id:"c"))))');
+      ], '(b (l id:"a" ((c id:"b" id:"c"))))');
 
       compare_array_dump([
         'a {b [d e] c};;;'
-      ],'(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
+      ], '(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
 
       compare_array_dump([
         '; Comment...',
@@ -147,7 +147,7 @@ describe("Meta.Compiler", function() {
         '; Comment...',
         ')',
         '; Comment...'
-      ],'(b (l id:"a" ((b (l id:"b") (l id:"c")))))');
+      ], '(b (l id:"a" ((b (l id:"b") (l id:"c")))))');
 
       compare_array_dump([
         'l1a ;...',
@@ -164,7 +164,7 @@ describe("Meta.Compiler", function() {
         'END',
         '    l3b',
         'l1b'
-      ],'(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +
+      ], '(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +
         '(l id:"l3b1" id:"l3b2"))) (l id:"l2b" (b (l id:"l3a") (l id:"l3b"))))) (l id:"l1b"))');
 
       compare_array_dump([
@@ -174,24 +174,24 @@ describe("Meta.Compiler", function() {
         'l1b',
         '  l2c',
         '  l2d'
-      ],'(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
+      ], '(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
     });
     
-    it('Should parse commas', function() {
+    it('Should parse commas', function () {
       compare_array_dump([
         'a (b c, d e, f g)'
-      ],'(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e") (c id:"f" id:"g"))))');
+      ], '(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e") (c id:"f" id:"g"))))');
 
       compare_array_dump([
         'a [b \nc,\n d\n e\n]'
-      ],'(b (l id:"a" [(c id:"b" id:"c") (c id:"d" id:"e")]))');
+      ], '(b (l id:"a" [(c id:"b" id:"c") (c id:"d" id:"e")]))');
 
       compare_array_dump([
         'a (b\n \nc\n,\n\n \nd\n \ne\n)'
-      ],'(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e"))))');
+      ], '(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e"))))');
     });
 
-    it('Should emit parse errors', function() {
+    it('Should emit parse errors', function () {
       compare_array_dump([
         'a (b c))'
       ],
@@ -293,27 +293,27 @@ describe("Meta.Compiler", function() {
       ]);
     });
     
-    it('Should parse do blocks', function() {
+    it('Should parse do blocks', function () {
       compare_array_dump([
         'a do',
         '  b',
         '  c',
         'd'
-      ],'(b (l id:"a" (d (l id:"b") (l id:"c"))) (l id:"d"))');
+      ], '(b (l id:"a" (d (l id:"b") (l id:"c"))) (l id:"d"))');
 
       compare_array_dump([
         'a do k',
         '  b',
         '  c',
         'd'
-      ],'(b (l id:"a" (d id:"k" (l id:"b") (l id:"c"))) (l id:"d"))');
+      ], '(b (l id:"a" (d id:"k" (l id:"b") (l id:"c"))) (l id:"d"))');
 
       compare_array_dump([
         'a do k',
         'b',
         'c',
         'd'
-      ],'(b (l id:"a" (d id:"k" (l id:"b") (l id:"c") (l id:"d"))))');
+      ], '(b (l id:"a" (d id:"k" (l id:"b") (l id:"c") (l id:"d"))))');
 
       compare_array_dump([
         'a do k',
@@ -321,7 +321,7 @@ describe("Meta.Compiler", function() {
         'do',
         'c',
         'd'
-      ],'(b (l id:"a" (d id:"k" (l id:"b") (l (d (l id:"c") (l id:"d"))))))');
+      ], '(b (l id:"a" (d id:"k" (l id:"b") (l (d (l id:"c") (l id:"d"))))))');
     });
 
 
