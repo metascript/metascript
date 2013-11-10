@@ -5,18 +5,18 @@ var parse_string = function(s) {
   var compiler = Meta.compiler_from_string(s);
   compiler.parse();
   return compiler;
-}
+};
 
 var parse_array = function(a) {
   return parse_string(a.join('\n'));
-}
+};
 
 var compare_array_dump = function(a, expected, errors) {
   var compiler = parse_array(a);
-  if (typeof errors == 'undefined') errors = [];
+  if (typeof errors === 'undefined') { errors = []; }
   compiler.should.have.property('errors').with.lengthOf(errors.length);
   compiler.should.have.property('root');
-  if (expected != null) {
+  if (expected !== null) {
     var dump = compiler.root.string_dump();
     dump.should.equal(expected);
   }
@@ -25,16 +25,16 @@ var compare_array_dump = function(a, expected, errors) {
     var found = false;
     for (var j = 0; j < errors.length; j++) {
       var current = errors[j];
-      if (e.line == current.line &&
-          e.column_number == current.column_number &&
+      if (e.line === current.line &&
+          e.column_number === current.column_number &&
           e.message.indexOf(current.message) >= 0) {
         found = true;
         break;
       }
-    };
+    }
     found.should.equal(true);
   }
-}
+};
 
 describe("Meta.Compiler", function() {
   describe("#parse()", function() {
@@ -78,7 +78,7 @@ describe("Meta.Compiler", function() {
       compare_array_dump([
         "print '''\n1\n2\n3\n'''\nok"
       ],'(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
-    })
+    });
 
     it('Should parse symbols and operators', function() {
       compare_array_dump([
@@ -88,7 +88,7 @@ describe("Meta.Compiler", function() {
       compare_array_dump([
         'a <== b <!> -> _\\$/z'
       ],'(b (l id:"a" op:"<==" id:"b" op:"<!>" op:"->" id:"_" op:"\\" id:"$" op:"/" id:"z"))');
-    })
+    });
 
     it('Should parse blocks', function() {
       compare_array_dump([
@@ -126,7 +126,7 @@ describe("Meta.Compiler", function() {
         '  l2c',
         '  l2d'
       ],'(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
-    })
+    });
 
     it('Should ignore comments and literate strings', function() {
       compare_array_dump([
@@ -175,7 +175,7 @@ describe("Meta.Compiler", function() {
         '  l2c',
         '  l2d'
       ],'(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
-    })
+    });
     
     it('Should parse commas', function() {
       compare_array_dump([
@@ -189,7 +189,7 @@ describe("Meta.Compiler", function() {
       compare_array_dump([
         'a (b\n \nc\n,\n\n \nd\n \ne\n)'
       ],'(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e"))))');
-    })
+    });
 
     it('Should emit parse errors', function() {
       compare_array_dump([
@@ -291,7 +291,7 @@ describe("Meta.Compiler", function() {
           message: 'Unterminated string literal'
         }
       ]);
-    })
+    });
     
     it('Should parse do blocks', function() {
       compare_array_dump([
@@ -322,9 +322,9 @@ describe("Meta.Compiler", function() {
         'c',
         'd'
       ],'(b (l id:"a" (d id:"k" (l id:"b") (l (d (l id:"c") (l id:"d"))))))');
-    })
+    });
 
 
-  })
-})
+  });
+});
 
