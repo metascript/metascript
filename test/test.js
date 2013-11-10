@@ -93,11 +93,11 @@ describe("Meta.Compiler", function() {
     it('Should parse blocks', function() {
       compare_array_dump([
         'a (b c)'
-      ],'(b (l id:"a" (id:"b" id:"c")))');
+      ],'(b (l id:"a" ((c id:"b" id:"c"))))');
 
       compare_array_dump([
         'a {b [d e] c}'
-      ],'(b (l id:"a" {id:"b" [id:"d" id:"e"] id:"c"}))');
+      ],'(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
 
       compare_array_dump([
         'a (',
@@ -131,11 +131,11 @@ describe("Meta.Compiler", function() {
     it('Should ignore comments and literate strings', function() {
       compare_array_dump([
         'a (b c) ; Hello!'
-      ],'(b (l id:"a" (id:"b" id:"c")))');
+      ],'(b (l id:"a" ((c id:"b" id:"c"))))');
 
       compare_array_dump([
         'a {b [d e] c};;;'
-      ],'(b (l id:"a" {id:"b" [id:"d" id:"e"] id:"c"}))');
+      ],'(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
 
       compare_array_dump([
         '; Comment...',
@@ -195,7 +195,7 @@ describe("Meta.Compiler", function() {
       compare_array_dump([
         'a (b c))'
       ],
-      '(b (l id:"a" (id:"b" id:"c")))',
+      '(b (l id:"a" ((c id:"b" id:"c"))))',
       [
         {
           line_number: 1,
@@ -212,7 +212,7 @@ describe("Meta.Compiler", function() {
       compare_array_dump([
         'a (b) c)'
       ],
-      '(b (l id:"a" (id:"b") id:"c"))',
+      '(b (l id:"a" ((c id:"b")) id:"c"))',
       [
         {
           line_number: 1,
@@ -291,8 +291,37 @@ describe("Meta.Compiler", function() {
           message: 'Unterminated string literal'
         }
       ]);
+    })
+    
+    it('Should parse do blocks', function() {
+      compare_array_dump([
+        'a do',
+        '  b',
+        '  c',
+        'd'
+      ],'(b (l id:"a" (d (l id:"b") (l id:"c"))) (l id:"d"))');
 
+      compare_array_dump([
+        'a do k',
+        '  b',
+        '  c',
+        'd'
+      ],'(b (l id:"a" (d id:"k" (l id:"b") (l id:"c"))) (l id:"d"))');
 
+      compare_array_dump([
+        'a do k',
+        'b',
+        'c',
+        'd'
+      ],'(b (l id:"a" (d id:"k" (l id:"b") (l id:"c") (l id:"d"))))');
+
+      compare_array_dump([
+        'a do k',
+        'b',
+        'do',
+        'c',
+        'd'
+      ],'(b (l id:"a" (d id:"k" (l id:"b") (l (d (l id:"c") (l id:"d"))))))');
     })
 
 
