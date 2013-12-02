@@ -17,7 +17,7 @@ var compare_array_dump = function (a, expected, errors) {
   compiler.should.have.property('errors').with.lengthOf(errors.length);
   compiler.should.have.property('root');
   if (expected !== null) {
-    var dump = compiler.root.string_dump();
+    var dump = compiler.root.stringDump();
     dump.should.equal(expected);
   }
   for (var i = 0; i < compiler.errors.length; i++) {
@@ -26,7 +26,7 @@ var compare_array_dump = function (a, expected, errors) {
     for (var j = 0; j < errors.length; j++) {
       var current = errors[j];
       if (e.line === current.line &&
-          e.column_number === current.column_number &&
+          e.columnNumber === current.columnNumber &&
           e.message.indexOf(current.message) >= 0) {
         found = true;
         break;
@@ -198,13 +198,13 @@ describe("Meta.Compiler", function () {
       '(b (l id:"a" ((c id:"b" id:"c"))))',
       [
         {
-          line_number: 1,
-          column_number: 7,
+          lineNumber: 1,
+          columnNumber: 7,
           message: 'Misplaced close'
         },
         {
-          line_number: 1,
-          column_number: 7,
+          lineNumber: 1,
+          columnNumber: 7,
           message: 'Closing root'
         }
       ]);
@@ -215,13 +215,13 @@ describe("Meta.Compiler", function () {
       '(b (l id:"a" ((c id:"b")) id:"c"))',
       [
         {
-          line_number: 1,
-          column_number: 7,
+          lineNumber: 1,
+          columnNumber: 7,
           message: 'Misplaced close'
         },
         {
-          line_number: 1,
-          column_number: 7,
+          lineNumber: 1,
+          columnNumber: 7,
           message: 'Closing root'
         }
       ]);
@@ -232,8 +232,8 @@ describe("Meta.Compiler", function () {
       '(b (l id:"a" ((c id:"b") id:"c")))',
       [
         {
-          line_number: 1,
-          column_number: 4,
+          lineNumber: 1,
+          columnNumber: 4,
           message: 'Mismatched close'
         }
       ]);
@@ -244,8 +244,8 @@ describe("Meta.Compiler", function () {
       '(b (l id:"a" id:"b" id:"c"))',
       [
         {
-          line_number: 1,
-          column_number: 3,
+          lineNumber: 1,
+          columnNumber: 3,
           message: 'Misplaced ","'
         }
       ]);
@@ -259,8 +259,8 @@ describe("Meta.Compiler", function () {
       '(b (l id:"a" ((b (l id:"b") (l id:"c")) id:"d")))',
       [
         {
-          line_number: 4,
-          column_number: 1,
+          lineNumber: 4,
+          columnNumber: 1,
           message: 'Indentation is less than enclosing block level'
         }
       ]);
@@ -271,23 +271,23 @@ describe("Meta.Compiler", function () {
       '(b (l id:"print" val:"a?z" val:"a?z" val:"a?z"))',
       [
         {
-          line_number: 1,
-          column_number: 12,
+          lineNumber: 1,
+          columnNumber: 12,
           message: 'Unrecognized hex escape'
         },
         {
-          line_number: 1,
-          column_number: 23,
+          lineNumber: 1,
+          columnNumber: 23,
           message: 'Unrecognized unicode escape'
         },
         {
-          line_number: 1,
-          column_number: 32,
+          lineNumber: 1,
+          columnNumber: 32,
           message: 'Unrecognized octal escape'
         },
         {
-          line_number: 1,
-          column_number: 38,
+          lineNumber: 1,
+          columnNumber: 38,
           message: 'Unterminated string literal'
         }
       ]);
