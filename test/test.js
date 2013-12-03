@@ -1,18 +1,18 @@
 var Meta = (require('../lib/meta'))();
 var should = require('should');
 
-var parse_string = function (s) {
-  var compiler = Meta.compiler_from_string(s);
+var parseString = function (s) {
+  var compiler = Meta.compilerFromString(s);
   compiler.parse();
   return compiler;
 };
 
-var parse_array = function (a) {
-  return parse_string(a.join('\n'));
+var parseArray = function (a) {
+  return parseString(a.join('\n'));
 };
 
-var compare_array_dump = function (a, expected, errors) {
-  var compiler = parse_array(a);
+var compareArrayDump = function (a, expected, errors) {
+  var compiler = parseArray(a);
   if (typeof errors === 'undefined') { errors = []; }
   compiler.should.have.property('errors').with.lengthOf(errors.length);
   compiler.should.have.property('root');
@@ -39,74 +39,74 @@ var compare_array_dump = function (a, expected, errors) {
 describe("Meta.Compiler", function () {
   describe("#parse()", function () {
     it('Should parse symbols and values', function () {
-      compare_array_dump([
+      compareArrayDump([
         'print "Hello!"'
       ], '(b (l id:"print" val:"Hello!"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print 42'
       ], '(b (l id:"print" val:42))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print 42.0 .42 -42 4.2e12 2.4e-12'
       ], '(b (l id:"print" val:42 val:0.42 val:-42 val:4200000000000 val:2.4e-12))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print _12312 $_q12'
       ], '(b (l id:"print" id:"_12312" id:"$_q12"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print "a\\x20\\040z"'
       ], '(b (l id:"print" val:"a  z"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print "\\n\\t" "xy\\uaBcDz" ""'
       ], '(b (l id:"print" val:"\n\t" val:"xy\uaBcDz" val:""))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print """END\n1\n2\n3\nEND\nok'
       ], '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'print """\n1\n2\n3\n"""\nok'
       ], '(b (l id:"print" val:"123") (l id:"ok"))');
 
-      compare_array_dump([
+      compareArrayDump([
         "print '''END\n1\n2\n3\nEND\nok"
       ], '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
 
-      compare_array_dump([
+      compareArrayDump([
         "print '''\n1\n2\n3\n'''\nok"
       ], '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
     });
 
     it('Should parse symbols and operators', function () {
-      compare_array_dump([
+      compareArrayDump([
         'a + b *** !@# @$d.k.abc'
       ], '(b (l id:"a" op:"+" id:"b" op:"***" op:"!@#" op:"@" id:"$d" op:"." id:"k" op:"." id:"abc"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a <== b <!> -> _\\$/z'
       ], '(b (l id:"a" op:"<==" id:"b" op:"<!>" op:"->" id:"_" op:"\\" id:"$" op:"/" id:"z"))');
     });
 
     it('Should parse blocks', function () {
-      compare_array_dump([
+      compareArrayDump([
         'a (b c)'
       ], '(b (l id:"a" ((c id:"b" id:"c"))))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a {b [d e] c}'
       ], '(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a (',
         '  b',
         '  c',
         ')'
       ], '(b (l id:"a" ((b (l id:"b") (l id:"c")))))');
 
-      compare_array_dump([
+      compareArrayDump([
         'l1a',
         '  l2a',
         '    l3a',
@@ -118,7 +118,7 @@ describe("Meta.Compiler", function () {
       ], '(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +
         '(l id:"l3b1" id:"l3b2"))) (l id:"l2b" (b (l id:"l3a") (l id:"l3b"))))) (l id:"l1b"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'l1a',
         '  l2a',
         '  l2b',
@@ -129,15 +129,15 @@ describe("Meta.Compiler", function () {
     });
 
     it('Should ignore comments and literate strings', function () {
-      compare_array_dump([
+      compareArrayDump([
         'a (b c) ; Hello!'
       ], '(b (l id:"a" ((c id:"b" id:"c"))))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a {b [d e] c};;;'
       ], '(b (l id:"a" {(c id:"b" [(c id:"d" id:"e")] id:"c")}))');
 
-      compare_array_dump([
+      compareArrayDump([
         '; Comment...',
         'a (',
         '; Comment...',
@@ -149,7 +149,7 @@ describe("Meta.Compiler", function () {
         '; Comment...'
       ], '(b (l id:"a" ((b (l id:"b") (l id:"c")))))');
 
-      compare_array_dump([
+      compareArrayDump([
         'l1a ;...',
         '  l2a',
         '    l3a',
@@ -167,7 +167,7 @@ describe("Meta.Compiler", function () {
       ], '(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +
         '(l id:"l3b1" id:"l3b2"))) (l id:"l2b" (b (l id:"l3a") (l id:"l3b"))))) (l id:"l1b"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'l1a',
         '  l2a',
         '  l2b',
@@ -178,21 +178,21 @@ describe("Meta.Compiler", function () {
     });
     
     it('Should parse commas', function () {
-      compare_array_dump([
+      compareArrayDump([
         'a (b c, d e, f g)'
       ], '(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e") (c id:"f" id:"g"))))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a [b \nc,\n d\n e\n]'
       ], '(b (l id:"a" [(c id:"b" id:"c") (c id:"d" id:"e")]))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a (b\n \nc\n,\n\n \nd\n \ne\n)'
       ], '(b (l id:"a" ((c id:"b" id:"c") (c id:"d" id:"e"))))');
     });
 
     it('Should emit parse errors', function () {
-      compare_array_dump([
+      compareArrayDump([
         'a (b c))'
       ],
       '(b (l id:"a" ((c id:"b" id:"c"))))',
@@ -209,7 +209,7 @@ describe("Meta.Compiler", function () {
         }
       ]);
 
-      compare_array_dump([
+      compareArrayDump([
         'a (b) c)'
       ],
       '(b (l id:"a" ((c id:"b")) id:"c"))',
@@ -226,7 +226,7 @@ describe("Meta.Compiler", function () {
         }
       ]);
       
-      compare_array_dump([
+      compareArrayDump([
         'a (b] c)'
       ],
       '(b (l id:"a" ((c id:"b") id:"c")))',
@@ -238,7 +238,7 @@ describe("Meta.Compiler", function () {
         }
       ]);
       
-      compare_array_dump([
+      compareArrayDump([
         'a b, c'
       ],
       '(b (l id:"a" id:"b" id:"c"))',
@@ -250,7 +250,7 @@ describe("Meta.Compiler", function () {
         }
       ]);
       
-      compare_array_dump([
+      compareArrayDump([
         'a (',
         '  b',
         '  c',
@@ -265,7 +265,7 @@ describe("Meta.Compiler", function () {
         }
       ]);
 
-      compare_array_dump([
+      compareArrayDump([
         'print "a\\xK0z" "a\\u0K20z" "a\\090z" "az'
       ],
       '(b (l id:"print" val:"a?z" val:"a?z" val:"a?z"))',
@@ -294,28 +294,28 @@ describe("Meta.Compiler", function () {
     });
     
     it('Should parse do blocks', function () {
-      compare_array_dump([
+      compareArrayDump([
         'a do',
         '  b',
         '  c',
         'd'
       ], '(b (l id:"a" (d (l id:"b") (l id:"c"))) (l id:"d"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a do k',
         '  b',
         '  c',
         'd'
       ], '(b (l id:"a" (d id:"k" (l id:"b") (l id:"c"))) (l id:"d"))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a do k',
         'b',
         'c',
         'd'
       ], '(b (l id:"a" (d id:"k" (l id:"b") (l id:"c") (l id:"d"))))');
 
-      compare_array_dump([
+      compareArrayDump([
         'a do k',
         'b',
         'do',
