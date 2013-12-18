@@ -459,34 +459,31 @@ describe('Meta.Compiler', function () {
   });
 
   describe('#resolve()', function () {
-    /*
     it('Should resolve symbols', function () {
-      compareArrayToTokenDump(parseArray([
-        'Object require null'
-      ]).resolve(), '(b (l external:Object external:require external:null))');
+      compareArrayToExpressionString(parseArray([
+        'var (a, b)', 'a b'
+      ]).combine().resolve(),
+      '<tuple>(var(<tuple>(a, b)), <call>(a, b))');
 
-      compareArrayToTokenDump(parseArray([
-        'Object (require null)'
-      ]).resolve(), '(b (l external:Object ((c external:require external:null))))');
     });
 
     it('Should detect unresolved symbols', function () {
-      compareArrayToTokenDump(parseArray([
-        'Ping require pong'
-      ]).resolve(), '(b (l id:"Ping" external:require id:"pong"))', [
+      compareArrayToExpressionString(parseArray([
+        'var (a, b)', 'c d'
+      ]).combine().resolve(),
+      '<tuple>(var(<tuple>(a, b)), <call>(c, d))', [
         {
-          lineNumber: 1,
+          lineNumber: 2,
           columnNumber: 0,
-          message: 'Undefined symbol "Ping"'
+          message: 'Undeclared symbol "c"'
         },
         {
-          lineNumber: 1,
-          columnNumber: 13,
-          message: 'Undefined symbol "pong"'
+          lineNumber: 2,
+          columnNumber: 2,
+          message: 'Undeclared symbol "d"'
         }
       ]);
     });
-    */
   });
 });
 
