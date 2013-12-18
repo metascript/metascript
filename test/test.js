@@ -435,11 +435,26 @@ describe('Meta.Compiler', function () {
         'if a do k', '  b p', '  c q'
       ]).combine(), 'if(a, <do>(k, <call>(b, p), <call>(c, q)))');
 
-    });
-  });
+      compareArrayToExpressionString(parseArray([
+        'x = y = z'
+      ]).combine(), '=(x, =(y, z))');
 
-  describe('#fail()', function () {
-    it('Should not fail', function () {
+      compareArrayToExpressionString(parseArray([
+        'if a b else c'
+      ]).combine(), 'if(a, <tuple>(b, c))');
+
+      compareArrayToExpressionString(parseArray([
+        'if a (b, c)'
+      ]).combine(), 'if(a, <tuple>(b, c))');
+
+      compareArrayToExpressionString(parseArray([
+        'if a b', 'else c'
+      ]).combine(), 'if(a, <tuple>(b, c))');
+
+      compareArrayToExpressionString(parseArray([
+        'if a do', '  t1', '  t2', 'else do', '  t3', '  t4'
+      ]).combine(), 'if(a, <tuple>(<do>(t1, t2), <do>(t3, t4)))');
+
     });
   });
 
