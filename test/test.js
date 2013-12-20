@@ -307,21 +307,21 @@ describe('Meta.Compiler', function () {
         '  b',
         '  c',
         'd'
-      ]), '(b (l id:"a" (d (l id:"b") (l id:"c"))) (l id:"d"))');
+      ]), '(b (l id:"a" (d (b (l id:"b") (l id:"c")))) (l id:"d"))');
 
       compareArrayToTokenDump(parseArray([
         'a do k',
         '  b',
         '  c',
         'd'
-      ]), '(b (l id:"a" (d id:"k" (l id:"b") (l id:"c"))) (l id:"d"))');
+      ]), '(b (l id:"a" (d id:"k" (b (l id:"b") (l id:"c")))) (l id:"d"))');
 
       compareArrayToTokenDump(parseArray([
         'a do k',
         'b',
         'c',
         'd'
-      ]), '(b (l id:"a" (d id:"k" (l id:"b") (l id:"c") (l id:"d"))))');
+      ]), '(b (l id:"a" (d id:"k" (b (l id:"b") (l id:"c") (l id:"d")))))');
 
       compareArrayToTokenDump(parseArray([
         'a do k',
@@ -329,7 +329,7 @@ describe('Meta.Compiler', function () {
         'do',
         'c',
         'd'
-      ]), '(b (l id:"a" (d id:"k" (l id:"b") (l (d (l id:"c") (l id:"d"))))))');
+      ]), '(b (l id:"a" (d id:"k" (b (l id:"b") (l (d (b (l id:"c") (l id:"d"))))))))');
     });
   });
     
@@ -433,7 +433,11 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(parseArray([
         'if a do k', '  b p', '  c q'
-      ]).combine(), 'if(a, <do>(k, <call>(b, p), <call>(c, q)))');
+      ]).combine(), 'if(a, <do>(<call>(k, <tuple>(<call>(b, p), <call>(c, q)))))');
+
+      compareArrayToExpressionString(parseArray([
+        'a do k', 'b', 'do', 'c', 'd'
+      ]).combine(), '<call>(a, <do>(<call>(k, <tuple>(b, <do>(c, d)))))');
 
       compareArrayToExpressionString(parseArray([
         'x = y = z'
