@@ -466,6 +466,10 @@ describe('Meta.Compiler', function () {
       compareArrayToExpressionString(parseArray([
         '(a) -> (a a)'
       ]).combine(), '->(a, <call>(a, a))');
+
+      compareArrayToExpressionString(parseArray([
+        'a->a+b'
+      ]).combine(), '->(a, +(a, b))');
     });
   });
 
