@@ -459,6 +459,13 @@ describe('Meta.Compiler', function () {
         'if a do', '  t1', '  t2', 'else do', '  t3', '  t4'
       ]).combine(), 'if(a, <tuple>(<do>(t1, t2), <do>(t3, t4)))');
 
+      compareArrayToExpressionString(parseArray([
+        '(a, b) -> b'
+      ]).combine(), '->(<tuple>(a, b), b)');
+
+      compareArrayToExpressionString(parseArray([
+        '(a) -> (a a)'
+      ]).combine(), '->(a, <call>(a, a))');
     });
   });
 
@@ -469,6 +476,15 @@ describe('Meta.Compiler', function () {
       ]).combine().resolve(),
       '<tuple>(var(<tuple>(a, b)), <call>(a, b))');
 
+      compareArrayToExpressionString(parseArray([
+        '(a, b) -> (a b)'
+      ]).combine().resolve(),
+      '->(<tuple>(a, b), <call>(a, b))');
+
+      compareArrayToExpressionString(parseArray([
+        'var f = (a, b) -> (a b)'
+      ]).combine().resolve(),
+      '=(var(f), ->(<tuple>(a, b), <call>(a, b)))');
     });
 
     it('Should detect unresolved symbols', function () {
