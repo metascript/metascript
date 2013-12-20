@@ -489,6 +489,11 @@ describe('Meta.Compiler', function () {
         'var f = (a, b) -> (a b)'
       ]).combine().resolve(),
       '=(var(f), ->(<tuple>(a, b), <call>(a, b)))');
+
+      compareArrayToExpressionString(parseArray([
+        '(a, b) -> (a.c + b.c)'
+      ]).combine().resolve(),
+      '->(<tuple>(a, b), +(.(a, c), .(b, c)))');
     });
 
     it('Should detect unresolved symbols', function () {
@@ -504,6 +509,22 @@ describe('Meta.Compiler', function () {
         {
           lineNumber: 2,
           columnNumber: 2,
+          message: 'Undeclared symbol "d"'
+        }
+      ]);
+
+      compareArrayToExpressionString(parseArray([
+        'var f = (a, b) -> (c d)'
+      ]).combine().resolve(),
+      '=(var(f), ->(<tuple>(a, b), <call>(c, d)))', [
+        {
+          lineNumber: 1,
+          columnNumber: 19,
+          message: 'Undeclared symbol "c"'
+        },
+        {
+          lineNumber: 1,
+          columnNumber: 21,
           message: 'Undeclared symbol "d"'
         }
       ]);
