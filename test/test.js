@@ -12,6 +12,22 @@ var parseArray = function (a) {
   return parseString(a.join('\n'));
 };
 
+var combineArray = function (a) {
+  var compiler = parseString(a.join('\n'));
+  compiler.combine();
+  compiler.checkArity();
+  return compiler;
+};
+
+var resolveArray = function (a) {
+  var compiler = parseString(a.join('\n'));
+  compiler.combine();
+  compiler.checkArity();
+  compiler.resolve();
+  return compiler;
+};
+
+
 var compareArray = function (printer, compiler, expected, errors) {
   if (typeof errors === 'undefined') { errors = []; }
   compiler.should.have.property('errors').with.lengthOf(errors.length);
@@ -303,6 +319,12 @@ describe('Meta.Compiler', function () {
     
     it('Should parse do blocks', function () {
       compareArrayToTokenDump(parseArray([
+        'do',
+        'a',
+        'b'
+      ]), '(b (l (d (b (l id:"a") (l id:"b")))))');
+
+      compareArrayToTokenDump(parseArray([
         'a do',
         '  b',
         '  c',
@@ -335,187 +357,220 @@ describe('Meta.Compiler', function () {
     
   describe('#combine()', function () {
     it('Should combine symbols', function () {
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '4 * 3'
-      ]).combine(), '*(4, 3)');
+      ]), '*(4, 3)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'x + 3 * 5'
-      ]).combine(), '+(x, *(3, 5))');
+      ]), '+(x, *(3, 5))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'x + y + z'
-      ]).combine(), '+(+(x, y), z)');
+      ]), '+(+(x, y), z)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'x + - y - + z'
-      ]).combine(), '-(+(x, -x(y)), +x(z))');
+      ]), '-(+(x, -x(y)), +x(z))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'x * - y / + z'
-      ]).combine(), '/(*(x, -x(y)), +x(z))');
+      ]), '/(*(x, -x(y)), +x(z))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '-x * - y / + z'
-      ]).combine(), '/(*(-x(x), -x(y)), +x(z))');
+      ]), '/(*(-x(x), -x(y)), +x(z))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '+ a * b'
-      ]).combine(), '*(+x(a), b)');
+      ]), '*(+x(a), b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a b'
-      ]).combine(), '<call>(a, b)');
+      ]), '<call>(a, b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a(b)'
-      ]).combine(), '<call>(a, b)');
+      ]), '<call>(a, b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a(b, c)'
-      ]).combine(), '<call>(a, <tuple>(b, c))');
+      ]), '<call>(a, <tuple>(b, c))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a[b]'
-      ]).combine(), '<element>(a, b)');
+      ]), '<element>(a, b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a([b, c])'
-      ]).combine(), '<call>(a, <array>(b, c))');
+      ]), '<call>(a, <array>(b, c))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a.b'
-      ]).combine(), '.(a, b)');
+      ]), '.(a, b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a.b.c'
-      ]).combine(), '.(.(a, b), c)');
+      ]), '.(.(a, b), c)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a.b[c]'
-      ]).combine(), '<element>(.(a, b), c)');
+      ]), '<element>(.(a, b), c)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a[b].c'
-      ]).combine(), '.(<element>(a, b), c)');
+      ]), '.(<element>(a, b), c)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '++a'
-      ]).combine(), '++x(a)');
+      ]), '++x(a)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a--'
-      ]).combine(), 'x--(a)');
+      ]), 'x--(a)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '++a--'
-      ]).combine(), 'x--(++x(a))');
+      ]), 'x--(++x(a))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'f(a--)'
-      ]).combine(), '<call>(f, x--(a))');
+      ]), '<call>(f, x--(a))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a b'
-      ]).combine(), 'if(a, b)');
+      ]), 'if(a, b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a if b c'
-      ]).combine(), 'if(a, if(b, c))');
+      ]), 'if(a, if(b, c))');
 
-      compareArrayToExpressionString(parseArray([
-        'if if a b c'
-      ]).combine(), 'if(if(a, b), c)');
+      compareArrayToExpressionString(combineArray([
+        'if (if a (b, c)) d'
+      ]), 'if(if(a, <tuple>(b, c)), d)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a do', '  b', '  c'
-      ]).combine(), 'if(a, <do>(b, c))');
+      ]), 'if(a, <do>(b, c))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a do k', '  b p', '  c q'
-      ]).combine(), 'if(a, <do>(<call>(k, <tuple>(<call>(b, p), <call>(c, q)))))');
+      ]), 'if(a, <do>(<call>(k, <tuple>(<call>(b, p), <call>(c, q)))))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a do k', 'b', 'do', 'c', 'd'
-      ]).combine(), '<call>(a, <do>(<call>(k, <tuple>(b, <do>(c, d)))))');
+      ]), '<call>(a, <do>(<call>(k, <tuple>(b, <do>(c, d)))))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'x = y = z'
-      ]).combine(), '=(x, =(y, z))');
+      ]), '=(x, =(y, z))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a b else c'
-      ]).combine(), 'if(a, <tuple>(b, c))');
+      ]), 'if(a, <tuple>(b, c))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a (b, c)'
-      ]).combine(), 'if(a, <tuple>(b, c))');
+      ]), 'if(a, <tuple>(b, c))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a b', 'else c'
-      ]).combine(), 'if(a, <tuple>(b, c))');
+      ]), 'if(a, <tuple>(b, c))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'if a do', '  t1', '  t2', 'else do', '  t3', '  t4'
-      ]).combine(), 'if(a, <tuple>(<do>(t1, t2), <do>(t3, t4)))');
+      ]), 'if(a, <tuple>(<do>(t1, t2), <do>(t3, t4)))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '(a, b) -> b'
-      ]).combine(), '->(<tuple>(a, b), b)');
+      ]), '->(<tuple>(a, b), b)');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         '(a) -> (a a)'
-      ]).combine(), '->(a, <call>(a, a))');
+      ]), '->(a, <call>(a, a))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(combineArray([
         'a->a+b'
-      ]).combine(), '->(a, +(a, b))');
+      ]), '->(a, +(a, b))');
+
+      compareArrayToExpressionString(combineArray([
+        '(a, b) -> do', '  a', '  b'
+      ]), '->(<tuple>(a, b), <do>(a, b))');
+
+      compareArrayToExpressionString(combineArray([
+        '(a, b) -> return do', '  a', '  give b'
+      ]), '->(<tuple>(a, b), return(<do>(a, give(b))))');
+
+      compareArrayToExpressionString(combineArray([
+        'do', 'a', 'b'
+      ]), '<do>(a, b)');
+
+    });
+  });
+
+  describe('#checkArity()', function () {
+    it('Should detect arity errors', function () {
+      compareArrayToExpressionString(combineArray([
+        'if if a b c'
+      ]), 'if(if(a, b), c)', [
+        {
+          lineNumber: 1,
+          columnNumber: 3,
+          message: 'Void expression'
+        }
+      ]);
+
+      compareArrayToExpressionString(combineArray([
+        '(a, b) ->', '  a', '  b'
+      ]), '->(<tuple>(a, b), <tuple>(a, b))', [
+        {
+          lineNumber: 2,
+          columnNumber: 2,
+          message: 'should produce a simple value'
+        }
+      ]);
     });
   });
 
   describe('#resolve()', function () {
     it('Should resolve symbols', function () {
-      compareArrayToExpressionString(parseArray([
-        'var (a, b)', 'a b'
-      ]).combine().resolve(),
-      '<tuple>(var(<tuple>(a, b)), <call>(a, b))');
+      compareArrayToExpressionString(resolveArray([
+        'do',  'var (a, b)', 'a b'
+      ]), '<do>(var(<tuple>(a, b)), <call>(a, b))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(resolveArray([
         '(a, b) -> (a b)'
-      ]).combine().resolve(),
-      '->(<tuple>(a, b), <call>(a, b))');
+      ]), '->(<tuple>(a, b), <call>(a, b))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(resolveArray([
         'var f = (a, b) -> (a b)'
-      ]).combine().resolve(),
-      '=(var(f), ->(<tuple>(a, b), <call>(a, b)))');
+      ]), '=(var(f), ->(<tuple>(a, b), <call>(a, b)))');
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(resolveArray([
         '(a, b) -> (a.c + b.c)'
-      ]).combine().resolve(),
-      '->(<tuple>(a, b), +(.(a, c), .(b, c)))');
+      ]), '->(<tuple>(a, b), +(.(a, c), .(b, c)))');
     });
 
     it('Should detect unresolved symbols', function () {
-      compareArrayToExpressionString(parseArray([
-        'var (a, b)', 'c d'
-      ]).combine().resolve(),
-      '<tuple>(var(<tuple>(a, b)), <call>(c, d))', [
+      compareArrayToExpressionString(resolveArray([
+        'do', 'var (a, b)', 'c d'
+      ]),
+      '<do>(var(<tuple>(a, b)), <call>(c, d))', [
         {
-          lineNumber: 2,
+          lineNumber: 3,
           columnNumber: 0,
           message: 'Undeclared symbol "c"'
         },
         {
-          lineNumber: 2,
+          lineNumber: 3,
           columnNumber: 2,
           message: 'Undeclared symbol "d"'
         }
       ]);
 
-      compareArrayToExpressionString(parseArray([
+      compareArrayToExpressionString(resolveArray([
         'var f = (a, b) -> (c d)'
-      ]).combine().resolve(),
+      ]),
       '=(var(f), ->(<tuple>(a, b), <call>(c, d)))', [
         {
           lineNumber: 1,
