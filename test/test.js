@@ -584,6 +584,20 @@ describe('Meta.Compiler', function () {
         }
       ]);
     });
+
+    it('Should detect illegal assignments', function () {
+      compareArrayToExpressionString(resolveArray([
+        'do', 'const (a, b)', 'a = b'
+      ]),
+      '<do>(const(<tuple>(a, b)), =(a, b))', [
+        {
+          lineNumber: 3,
+          columnNumber: 0,
+          message: 'not assignable'
+        }
+      ]);
+    });
+
   });
 });
 
