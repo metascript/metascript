@@ -22,8 +22,8 @@ var combineArray = function (a) {
 var resolveArray = function (a) {
   var compiler = parseString(a.join('\n'));
   compiler.combine();
-  compiler.checkArity();
   compiler.resolve();
+  compiler.checkArity();
   return compiler;
 };
 
