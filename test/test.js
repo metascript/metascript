@@ -73,7 +73,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToTokenDump(parseArray([
         'print 42.0 .42 -42 4.2e12 2.4e-12'
-      ]), '(b (l id:"print" val:42 val:0.42 val:-42 val:4200000000000 val:2.4e-12))');
+      ]), '(b (l id:"print" val:42 val:0.42 op:"-" val:42 val:4200000000000 val:2.4e-12))');
 
       compareArrayToTokenDump(parseArray([
         'print _12312 $_q12'
@@ -536,7 +536,7 @@ describe('Meta.Compiler', function () {
     it('Should resolve symbols', function () {
       compareArrayToExpressionString(resolveArray([
         'do',  'var (a, b)', 'a b'
-      ]), '<do>(var(<tuple>(a, b)), <call>(a, b))');
+      ]), '<do>(<tuple>(a, b), <call>(a, b))');
 
       compareArrayToExpressionString(resolveArray([
         '(a, b) -> (a b)'
@@ -544,7 +544,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(resolveArray([
         'var f = (a, b) -> (a b)'
-      ]), '=(var(f), ->(<tuple>(a, b), <call>(a, b)))');
+      ]), '=(f, ->(<tuple>(a, b), <call>(a, b)))');
 
       compareArrayToExpressionString(resolveArray([
         '(a, b) -> (a.c + b.c)'
@@ -555,7 +555,7 @@ describe('Meta.Compiler', function () {
       compareArrayToExpressionString(resolveArray([
         'do', 'var (a, b)', 'c d'
       ]),
-      '<do>(var(<tuple>(a, b)), <call>(c, d))', [
+      '<do>(<tuple>(a, b), <call>(c, d))', [
         {
           lineNumber: 3,
           columnNumber: 0,
@@ -571,7 +571,7 @@ describe('Meta.Compiler', function () {
       compareArrayToExpressionString(resolveArray([
         'var f = (a, b) -> (c d)'
       ]),
-      '=(var(f), ->(<tuple>(a, b), <call>(c, d)))', [
+      '=(f, ->(<tuple>(a, b), <call>(c, d)))', [
         {
           lineNumber: 1,
           columnNumber: 19,
@@ -589,7 +589,7 @@ describe('Meta.Compiler', function () {
       compareArrayToExpressionString(resolveArray([
         'do', 'const (a, b)', 'a = b'
       ]),
-      '<do>(const(<tuple>(a, b)), =(a, b))', [
+      '<do>(<tuple>(a, b), =(a, b))', [
         {
           lineNumber: 3,
           columnNumber: 0,
