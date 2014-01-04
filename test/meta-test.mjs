@@ -11,9 +11,7 @@ it
 (if true 1 else 2).should.equal 1
 
 var test = () -> do
-  var a = null
-  var b = null
-  (a, b) = if true (1, 2) else (2, 1)
+  var (a, b) = if true (1, 2) else (2, 1)
   a.should.equal(1)
   b.should.equal(2)
   (a, b) = (b, a)
@@ -21,9 +19,8 @@ var test = () -> do
   b.should.equal(1)
 test()
 
-var f = (x) -> return do
-  var r = 1
-  give loop (r, x)
+var f = (x) ->
+  loop (var r = 1, x)
     if (x > 0)
       next (r * x, x - 1)
     else
