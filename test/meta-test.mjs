@@ -45,7 +45,7 @@ var g = (x, y) -> do
 g(1, 2).should.equal(1)
 g(-1, 2).should.equal(3)
 g(-1, -2).should.equal(4)
-g(0/0, -2).should.equal(5)
+g(NaN, -2).should.equal(5)
 
 var obj = {
   a: 1
@@ -59,3 +59,15 @@ arr.should.have.property(0, 1);
 arr.should.have.property(1, 2);
 arr.should.have.property(2, 3);
 arr.should.have.lengthOf(3);
+
+(arr[0], arr[2]) = (arr[2], arr[0])
+arr.should.have.property(0, 3);
+arr.should.have.property(2, 1);
+
+obj.m = () ->
+  this.a + this.b
+obj.m().should.equal(3)
+
+var voidFunction = () -> do
+( (typeof voidFunction())
+  .should.equal('undefined'  )

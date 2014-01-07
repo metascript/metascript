@@ -15,6 +15,11 @@ var parseArray = function (a) {
 var combineArray = function (a) {
   var compiler = parseString(a.join('\n'));
   compiler.combine();
+
+  var json = compiler.root.toJsonString();
+  var fromJson = compiler.root.fromJsonString(json);
+  compiler.root.toExpressionString().should.equal(fromJson.toExpressionString());
+
   compiler.checkArity();
   return compiler;
 };
@@ -22,6 +27,11 @@ var combineArray = function (a) {
 var resolveArray = function (a) {
   var compiler = parseString(a.join('\n'));
   compiler.combine();
+
+  var json = compiler.root.toJsonString();
+  var fromJson = compiler.root.fromJsonString(json);
+  compiler.root.toExpressionString().should.equal(fromJson.toExpressionString());
+
   compiler.resolve();
   compiler.checkArity();
   return compiler;
