@@ -71,3 +71,10 @@ obj.m().should.equal(3)
 var voidFunction = () -> do
 ( (typeof voidFunction())
   .should.equal('undefined'  )
+
+(() -> do
+  var C = (a) -> do
+    this.a = a
+  var c = new C (4)
+  c.should.have.property('a', 4);
+)()
