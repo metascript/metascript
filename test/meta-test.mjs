@@ -8,6 +8,7 @@ it
   'Should work'
   ()->do
 
+
 (if true 1 else 2).should.equal 1
 
 var test = () -> do
@@ -69,12 +70,12 @@ obj.m = () ->
 obj.m().should.equal(3)
 
 var voidFunction = () -> do
-( (typeof voidFunction())
-  .should.equal('undefined'  )
+  ( (typeof voidFunction())
+    .should.equal('undefined')  )
 
 (() -> do
   var C = (a) -> do
-    this.a = a
+    this.if = a
   var c = new C (4)
-  c.should.have.property('a', 4);
+  c.should.have.property('if', 4);
 )()
