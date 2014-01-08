@@ -79,3 +79,12 @@ var voidFunction = () -> do
   var c = new C (4)
   c.should.have.property('if', 4);
 )()
+
+meta
+  macro "moo"
+    predecence: KEY
+    expand: do
+      console.log("I am the macro! " + (expr.toExpressionString()))
+      give undefined
+
+moo 42
