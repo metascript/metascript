@@ -73,6 +73,9 @@ var voidFunction = () -> do
   ( (typeof voidFunction())
     .should.equal('undefined')  )
 
+obj.world = ()->"world!"
+("Hello "+ obj.world()).should.equal('Hello world!')
+
 (() -> do
   var C = (a) -> do
     this.if = a
@@ -84,7 +87,7 @@ meta
   macro "moo"
     predecence: KEY
     expand: do
-      console.log("I am the macro! " + (expr.toExpressionString()))
+      console.log("I am the macro! " + expr.toExpressionString())
       give undefined
 
 moo 42
