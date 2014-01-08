@@ -76,6 +76,11 @@ var voidFunction = () -> do
 obj.world = ()->"world!"
 ("Hello "+ obj.world()).should.equal('Hello world!')
 
+obj = {
+  world: ()->"world!"
+}
+("Hello "+ obj.world()).should.equal('Hello world!')
+
 (() -> do
   var C = (a) -> do
     this.if = a
