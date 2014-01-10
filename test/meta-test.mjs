@@ -92,7 +92,10 @@ meta
   macro "moo"
     predecence: KEY
     expand: do
-      console.log("I am the macro! " + expr.toExpressionString())
-      give null
+      var code = \<- ('moo ' + (arg))
+      code.replaceTag('arg', expr.argAt(0))
+      give code
 
-moo 42
+(moo 42).should.equal('moo 42')
+(moo 69).should.equal('moo 69')
+(moo ('Hello '+ 'meta!')).should.equal('moo Hello meta!')

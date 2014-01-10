@@ -52,7 +52,7 @@ var compareArray = function (printer, compiler, expected, errors) {
     for (var j = 0; j < errors.length; j++) {
       var current = errors[j];
       if (e.line === current.line &&
-          e.columnNumber === current.columnNumber &&
+          e.column === current.column &&
           e.message.indexOf(current.message) >= 0) {
         found = true;
         break;
@@ -232,13 +232,13 @@ describe('Meta.Compiler', function () {
       '(b (l id:"a" ((c id:"b" id:"c"))))',
       [
         {
-          lineNumber: 1,
-          columnNumber: 7,
+          line: 1,
+          column: 7,
           message: 'Misplaced close'
         },
         {
-          lineNumber: 1,
-          columnNumber: 7,
+          line: 1,
+          column: 7,
           message: 'Closing root'
         }
       ]);
@@ -249,13 +249,13 @@ describe('Meta.Compiler', function () {
       '(b (l id:"a" ((c id:"b")) id:"c"))',
       [
         {
-          lineNumber: 1,
-          columnNumber: 7,
+          line: 1,
+          column: 7,
           message: 'Misplaced close'
         },
         {
-          lineNumber: 1,
-          columnNumber: 7,
+          line: 1,
+          column: 7,
           message: 'Closing root'
         }
       ]);
@@ -266,8 +266,8 @@ describe('Meta.Compiler', function () {
       '(b (l id:"a" ((c id:"b") id:"c")))',
       [
         {
-          lineNumber: 1,
-          columnNumber: 4,
+          line: 1,
+          column: 4,
           message: 'Mismatched close'
         }
       ]);
@@ -278,8 +278,8 @@ describe('Meta.Compiler', function () {
       '(b (l id:"a" id:"b" id:"c"))',
       [
         {
-          lineNumber: 1,
-          columnNumber: 3,
+          line: 1,
+          column: 3,
           message: 'Misplaced ","'
         }
       ]);
@@ -293,8 +293,8 @@ describe('Meta.Compiler', function () {
       '(b (l id:"a" ((b (l id:"b") (l id:"c")) id:"d")))',
       [
         {
-          lineNumber: 4,
-          columnNumber: 1,
+          line: 4,
+          column: 1,
           message: 'Indentation is less than enclosing block level'
         }
       ]);
@@ -305,23 +305,23 @@ describe('Meta.Compiler', function () {
       '(b (l id:"print" val:"a?z" val:"a?z" val:"a?z"))',
       [
         {
-          lineNumber: 1,
-          columnNumber: 12,
+          line: 1,
+          column: 12,
           message: 'Unrecognized hex escape'
         },
         {
-          lineNumber: 1,
-          columnNumber: 23,
+          line: 1,
+          column: 23,
           message: 'Unrecognized unicode escape'
         },
         {
-          lineNumber: 1,
-          columnNumber: 32,
+          line: 1,
+          column: 32,
           message: 'Unrecognized octal escape'
         },
         {
-          lineNumber: 1,
-          columnNumber: 38,
+          line: 1,
+          column: 38,
           message: 'Unterminated string literal'
         }
       ]);
@@ -524,8 +524,8 @@ describe('Meta.Compiler', function () {
         'if if a b c'
       ]), 'if(if(a, b), c)', [
         {
-          lineNumber: 1,
-          columnNumber: 3,
+          line: 1,
+          column: 3,
           message: 'Void expression'
         }
       ]);
@@ -534,8 +534,8 @@ describe('Meta.Compiler', function () {
         '(a, b) ->', '  a', '  b'
       ]), '->(<tuple>(a, b), <tuple>(a, b))', [
         {
-          lineNumber: 2,
-          columnNumber: 2,
+          line: 2,
+          column: 2,
           message: 'should produce a simple value'
         }
       ]);
@@ -567,13 +567,13 @@ describe('Meta.Compiler', function () {
       ]),
       '<do>(<tuple>(a, b), <call>(c, d))', [
         {
-          lineNumber: 3,
-          columnNumber: 0,
+          line: 3,
+          column: 0,
           message: 'Undeclared identifier "c"'
         },
         {
-          lineNumber: 3,
-          columnNumber: 2,
+          line: 3,
+          column: 2,
           message: 'Undeclared identifier "d"'
         }
       ]);
@@ -583,13 +583,13 @@ describe('Meta.Compiler', function () {
       ]),
       '=(f, ->(<tuple>(a, b), <call>(c, d)))', [
         {
-          lineNumber: 1,
-          columnNumber: 19,
+          line: 1,
+          column: 19,
           message: 'Undeclared identifier "c"'
         },
         {
-          lineNumber: 1,
-          columnNumber: 21,
+          line: 1,
+          column: 21,
           message: 'Undeclared identifier "d"'
         }
       ]);
@@ -601,8 +601,8 @@ describe('Meta.Compiler', function () {
       ]),
       '<do>(<tuple>(a, b), =(a, b))', [
         {
-          lineNumber: 3,
-          columnNumber: 0,
+          line: 3,
+          column: 0,
           message: 'not assignable'
         }
       ]);
