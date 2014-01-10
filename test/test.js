@@ -569,12 +569,12 @@ describe('Meta.Compiler', function () {
         {
           lineNumber: 3,
           columnNumber: 0,
-          message: 'Undeclared symbol "c"'
+          message: 'Undeclared identifier "c"'
         },
         {
           lineNumber: 3,
           columnNumber: 2,
-          message: 'Undeclared symbol "d"'
+          message: 'Undeclared identifier "d"'
         }
       ]);
 
@@ -585,12 +585,12 @@ describe('Meta.Compiler', function () {
         {
           lineNumber: 1,
           columnNumber: 19,
-          message: 'Undeclared symbol "c"'
+          message: 'Undeclared identifier "c"'
         },
         {
           lineNumber: 1,
           columnNumber: 21,
-          message: 'Undeclared symbol "d"'
+          message: 'Undeclared identifier "d"'
         }
       ]);
     });

@@ -93,6 +93,6 @@ meta
     predecence: KEY
     expand: do
       console.log("I am the macro! " + expr.toExpressionString())
-      give undefined
+      give null
 
 moo 42
