@@ -99,3 +99,65 @@ meta
 (moo 42).should.equal('moo 42')
 (moo 69).should.equal('moo 69')
 (moo ('Hello '+ 'meta!')).should.equal('moo Hello meta!')
+
+meta
+  macro "@@@"
+    predecence: KEY
+    expand: do
+      var code = \<- this.arg
+      code.replaceTag('arg', expr.argAt(0))
+      give code
+
+obj = {
+  a: 1
+  b: 2
+  m: () -> (@@@a + @@@b)
+}
+(obj.m()).should.equal(3)
+
+meta
+  macro '@'
+    predecence: KEY
+    expand: do
+      var member = expr.argAt(0)
+      var code = if (member.isTag())
+        \<- this.member
+        \<- this[member]
+      code.replaceTag('member', member)
+      give code
+obj['aaa'] = 42
+obj.m1 = () -> (@a + @b)
+obj.m2 = (x, y) -> @(x + y)
+
+(obj.m1()).should.equal(3)
+(obj.m2('a', 'aa')).should.equal(42)
+
+require 'should'
+var util = require 'util'
+
+meta
+  macro 'vTagTest'
+    predecence: KEY
+    expand: do
+      var count = expr.argAt(0)
+      var code = \<- do
+        var \result = []
+        loop (var \i = 0) do
+          if (\i < count) do
+            \result.push(\i)
+            next (\i + 1)
+          else end
+        give \result
+      code.replaceTag('count', count)
+      give code
+
+var vTagTestN = vTagTest 3
+vTagTestN.should.have.length(3)
+vTagTestN.should.have.property(0, 0);
+vTagTestN.should.have.property(1, 1);
+vTagTestN.should.have.property(2, 2);
+vTagTestN = vTagTest 2
+vTagTestN.should.have.length(2)
+vTagTestN.should.have.property(0, 0);
+vTagTestN.should.have.property(1, 1);
+
