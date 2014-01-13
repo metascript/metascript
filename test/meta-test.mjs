@@ -198,10 +198,17 @@ it 'Should have macros that rename variables' do
   vTagTestN.should.have.property(0, 0)
   vTagTestN.should.have.property(1, 1)
 
-
 it 'Should handle the void operator' do
   void (var a = 1)
   a.should.equal 1
 
+it 'Should handle giving void do invocations' do
+  var v = 0
+  var f = ()->do
+    v = 1
+    give do
+      v = 2
+  f()
+  v.should.equal 2
 
 )
