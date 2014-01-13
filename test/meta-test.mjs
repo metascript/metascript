@@ -1,12 +1,32 @@
 require 'should'
 
-describe
-  'Metascript'
-  ()->do
+meta
+  macro 'describe'
+    predecence: KEY
+    arity: binaryKeyword
+    expand: do
+      var code = \<- describe
+        item
+        () -> body
+      code.replaceTag('item', expr.argAt(0))
+      code.replaceTag('body', expr.argAt(1))
+      give code
 
-it
-  'Should work'
-  ()->do
+meta
+  macro 'it'
+    predecence: KEY
+    arity: binaryKeyword
+    expand: do
+      var code = \<- it
+        item
+        () -> body
+      code.replaceTag('item', expr.argAt(0))
+      code.replaceTag('body', expr.argAt(1))
+      give code
+
+describe 'Metascript' do
+
+it 'Should work' do
 
 
 (if true 1 else 2).should.equal 1
