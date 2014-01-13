@@ -157,9 +157,11 @@ it 'Should have a proper \"@\" operator' do
       predecence: KEY
       expand: do
         var member = expr.argAt(0)
-        var code = if (member.isTag())
-          \<- this.member
-          \<- this[member]
+        var code =
+          if (member.isTag())
+            \<- this.member
+          else
+            \<- this[member]
         code.replaceTag('member', member)
         give code
   var obj = {
