@@ -213,4 +213,16 @@ it 'Should handle giving void do invocations' do
   f()
   v.should.equal 2
 
+it 'Should handle || short circuit' do
+  var v = 1;
+  var t = (true || do (v = 2, give false))
+  v.should.equal 1
+  t.should.equal true
+
+it 'Should handle && short circuit' do
+  var v = 1;
+  var t = (false && do (v = 2, give true))
+  v.should.equal 1
+  t.should.equal false
+
 )
