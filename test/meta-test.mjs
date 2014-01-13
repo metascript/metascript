@@ -7,7 +7,8 @@ meta
     expand: do
       var code = \<- describe
         item
-        () -> body
+        () -> do
+          body
       code.replaceTag('item', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
       give code
@@ -19,17 +20,18 @@ meta
     expand: do
       var code = \<- it
         item
-        () -> body
+        () -> do
+          body
       code.replaceTag('item', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
       give code
 
-describe 'Metascript' do (
+describe 'Metascript' (
 
-it 'Should evaluate simple expression' do
+it 'Should evaluate simple expression'
   (if true 1 else 2).should.equal 1
 
-it 'Should handle tuple assignments' do
+it 'Should handle tuple assignments'
   var (a, b) = if true (1, 2) else (2, 1)
   a.should.equal(1)
   b.should.equal(2)
@@ -37,7 +39,7 @@ it 'Should handle tuple assignments' do
   a.should.equal(2)
   b.should.equal(1)
 
-it 'Should handle loops' do
+it 'Should handle loops'
   var f = (x) ->
     loop (var r = 1, x)
       if (x > 0)
@@ -50,7 +52,7 @@ it 'Should handle loops' do
   f(6).should.equal(6 * 5 * 4 * 3 * 2)
 
 
-it 'Should handle nested do and if' do
+it 'Should handle nested do and if'
   var g = (x, y) -> do
     var (a, b) = do
       if (x > 0)
@@ -67,7 +69,7 @@ it 'Should handle nested do and if' do
   g(NaN, -2).should.equal(5)
 
 
-it 'Should handle object literals' do
+it 'Should handle object literals'
   var obj = {
     a: 1
     b: 2
@@ -85,7 +87,7 @@ it 'Should handle array literals' do
   arr.should.have.property(0, 3)
   arr.should.have.property(2, 1)
 
-it 'Should handle method calls' do
+it 'Should handle method calls'
   var obj = {
     a: 1
     b: 2
@@ -94,7 +96,7 @@ it 'Should handle method calls' do
     this.a + this.b
   obj.m().should.equal(3)
 
-it 'Should handle do blocks returning undefined' do
+it 'Should handle do blocks returning undefined'
   var obj = {
     m1: ()->1
     m2: ()->()
@@ -109,7 +111,7 @@ it 'Should handle do blocks returning undefined' do
   (obj.m2() == ()).should.equal(true)
   (obj.m3() == ()).should.equal(true)
 
-it 'Should handle string concatenation' do
+it 'Should handle string concatenation'
   var obj = {}
   obj.world = ()->"world!"
   ("Hello "+ obj.world()).should.equal('Hello world!')
@@ -118,13 +120,13 @@ it 'Should handle string concatenation' do
   }
   ("Hello "+ obj.world()).should.equal('Hello world!')
 
-it 'Should handle constructors' do
+it 'Should handle constructors'
   var C = (a) -> do
     this.if = a
   var c = new C (4)
   c.should.have.property('if', 4)
 
-it 'Should handle a simple macro' do
+it 'Should handle a simple macro'
   meta
     macro "moo"
       predecence: KEY
@@ -136,7 +138,7 @@ it 'Should handle a simple macro' do
   (moo 69).should.equal('moo 69')
   (moo ('Hello '+ 'meta!')).should.equal('moo Hello meta!')
 
-it 'Should handle a macro involving \"this\"' do
+it 'Should handle a macro involving \"this\"'
   meta
     macro "@@@"
       predecence: KEY
@@ -151,7 +153,7 @@ it 'Should handle a macro involving \"this\"' do
   }
   (obj.m()).should.equal(3)
 
-it 'Should have a proper \"@\" operator' do
+it 'Should have a proper \"@\" operator'
   meta
     macro '@'
       predecence: KEY
@@ -174,7 +176,7 @@ it 'Should have a proper \"@\" operator' do
   (obj.m1()).should.equal(3)
   (obj.m2('a', 'aa')).should.equal(42)
 
-it 'Should have macros that rename variables' do
+it 'Should have macros that rename variables'
   meta
     macro 'vTagTest'
       predecence: KEY
@@ -200,11 +202,11 @@ it 'Should have macros that rename variables' do
   vTagTestN.should.have.property(0, 0)
   vTagTestN.should.have.property(1, 1)
 
-it 'Should handle the void operator' do
+it 'Should handle the void operator'
   void (var a = 1)
   a.should.equal 1
 
-it 'Should handle giving void do invocations' do
+it 'Should handle giving void do invocations'
   var v = 0
   var f = ()->do
     v = 1
@@ -213,13 +215,13 @@ it 'Should handle giving void do invocations' do
   f()
   v.should.equal 2
 
-it 'Should handle || short circuit' do
+it 'Should handle || short circuit'
   var v = 1;
   var t = (true || do (v = 2, give false))
   v.should.equal 1
   t.should.equal true
 
-it 'Should handle && short circuit' do
+it 'Should handle && short circuit'
   var v = 1;
   var t = (false && do (v = 2, give true))
   v.should.equal 1
