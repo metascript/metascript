@@ -227,4 +227,76 @@ it 'Should handle && short circuit'
   v.should.equal 1
   t.should.equal false
 
+it 'Can replace tags with arrays inside code'
+  meta
+    macro 'addTwice'
+      arity: binary
+      expand: do
+        var left = expr.argAt(0)
+        var right = expr.argAt(1)
+        var code = \<- (left += right)
+        code.replaceTag('left', left)
+        code.replaceTag('right', right)
+        var result = \<- (do code)
+        result.replaceTag('code', [code, code])
+        give result
+  var a = 0
+  a addTwice 1
+  a.should.equal 2
+
+meta
+  macro 'async'
+    predecence: KEY
+    arity: zero
+    expand: ()
+
+meta
+  macro 'now'
+    predecence: KEY
+    arity: unary
+    expand: do
+      var body = expr.argAt(0)
+      console.log('BODY START: ' + body.toExpressionString())
+      var whenMap = new Object(null)
+      loop (var i = 0) do
+        if (i >= body.argCount()) end
+        var arg = body.argAt(i)
+        if (arg.id() == 'when') do
+          console.log('  WHEN: ' + arg.toExpressionString())
+          body.remove(arg)
+          next (i)
+        else if (arg.id() == 'then') do
+          console.log('  THEN: ' + arg.toExpressionString())
+          body.remove(arg)
+          next (i)
+        else
+          next (i + 1)
+      console.log('BODY END:   ' + body.toExpressionString())
+      give null
+
+meta
+  macro 'when'
+    predecence: KEY
+    arity: binaryKeyword
+    dependsFrom: 'now'
+    expand: ()
+
+meta
+  macro 'then'
+    predecence: KEY
+    arity: unary
+    dependsFrom: 'now'
+    expand: ()
+
+
+now
+  console.log 'Now 1'
+when foo
+  () -> (console.log 'Foo')
+when bar
+  () -> (console.log 'Bar')
+then
+  () -> (console.log 'now then')
+
+
 )
