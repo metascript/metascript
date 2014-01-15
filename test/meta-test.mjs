@@ -39,6 +39,17 @@ it 'Should handle tuple assignments'
   a.should.equal(2)
   b.should.equal(1)
 
+it 'Should handle operator precedences'
+  var obj = {
+    nested : {
+      m: () -> 'b'
+    }
+    m: () -> this.nested
+  }
+  var b = obj.m().m()
+  b.should.equal 'b'
+  ('a' + obj.m().m()).should.equal 'ab'
+
 it 'Should handle loops'
   var f = (x) ->
     loop (var r = 1, x)
@@ -245,6 +256,53 @@ it 'Can replace tags with arrays inside code'
   a.should.equal 2
 
 meta
+  macro '\\->'
+    predecence: LOW
+    arity: binary
+    expand: do
+      console.log('\\->')
+      var replacements = expr.argAt(0)
+      if (!replacements.isObject()) do
+        expr.error('Object literal expected')
+        give ()
+      var code = expr.argAt(1)
+      var codeTag = \<- \codeTag
+      var result = \<- do
+        var codeTag = code
+        tagReplacements
+        give codeTag
+      var tagReplacements = []
+      var ok = true
+      replacements.forEach
+        (replacement) -> do
+          if (! (replacement.isProperty() && replacement.argAt(0).isTag())) do
+            replacement.error('Tag definition expected')
+            ok = false
+          var replacementTag = replacement.argAt(0)
+          console.log('  replacement   : ' + replacement.toExpressionString())
+          console.log('  replacementTag: ' + replacementTag.toExpressionString())
+          console.log('  replacementTag.val: ' + replacementTag.val)
+          console.log('  replacementTag.getTag(): ' + replacementTag.getTag())
+          console.log('  replacement.argAt(0).getTag()   : ' + replacement.argAt(0).getTag())
+          ; var tagName = replacement.argAt(0).getTag()
+          var tagName = replacement.argAt(0).val
+          var quotedTagName = \<- 'name'
+          console.log('  quotedTagName: ' + quotedTagName.toExpressionString())
+          quotedTagName.val = tagName
+          console.log('  quotedTagName: ' + quotedTagName.toExpressionString())
+          var tagReplacement = \<- (codeTag.replageTag(quotedTagName, replacement))
+          tagReplacement.replaceTag('codeTag', codeTag)
+          tagReplacement.replaceTag('quotedTagName', quotedTagName)
+          tagReplacement.replaceTag('replacement', replacement.argAt(1))
+          tagReplacements.push tagReplacement
+          console.log('  REPLACEMENT: ' + tagReplacement.toExpressionString())
+      give \<- null
+
+
+
+
+
+meta
   macro 'async'
     predecence: KEY
     arity: zero
@@ -273,6 +331,10 @@ meta
           next (i + 1)
       console.log('BODY END:   ' + body.toExpressionString())
       give null
+
+;var test = { foo: null } \->
+;  console.log('Meta')
+
 
 meta
   macro 'when'
