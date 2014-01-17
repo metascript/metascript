@@ -536,11 +536,11 @@ describe('Meta.Compiler', function () {
       ]);
 
       compareArrayToExpressionString(combineArray([
-        '(a, b) ->', '  a', '  b'
-      ]), '->(<tuple>(a, b), <tuple>(a, b))', [
+        '(a, b) ->', '  return', '    a', '    b'
+      ]), '->(<tuple>(a, b), return(<tuple>(a, b)))', [
         {
-          line: 2,
-          column: 2,
+          line: 3,
+          column: 4,
           message: 'should produce a simple value'
         }
       ]);

@@ -7,8 +7,7 @@ meta
     expand: do
       var code = \<- describe
         item
-        () -> do
-          body
+        () -> body
       code.replaceTag('item', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
       give code
@@ -20,8 +19,7 @@ meta
     expand: do
       var code = \<- it
         item
-        () -> do
-          body
+        () -> body
       code.replaceTag('item', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
       give code
@@ -88,7 +86,7 @@ it 'Should handle object literals'
   obj.should.have.property('a', 1)
   obj.should.have.property('b', 2)
 
-it 'Should handle array literals' do
+it 'Should handle array literals'
   var arr = [ 1, 2, 3 ]
   arr.should.have.property(0, 1)
   arr.should.have.property(1, 2)
@@ -111,7 +109,7 @@ it 'Should handle do blocks returning undefined'
   var obj = {
     m1: ()->1
     m2: ()->()
-    m3: ()->do
+    m3: ()->
       this.m1()
       this.m2()
   }
@@ -398,15 +396,15 @@ it 'Gives a way out of callback hell'
   now
     log 0
     caller(async log1)
-  when log1 () -> do
+  when log1 () ->
     log 1
     caller(async log2)
-  when log2 () -> do
+  when log2 () ->
     log 2
     caller(async)
   then () -> do
   log 3
-  now do
+  now
     log 4
     caller(async)
   then () -> do
