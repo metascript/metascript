@@ -167,16 +167,6 @@ else
 ```
 
 If it is complete (it has both a consequent and an else branch) it can be used as a nested expression similarly to the Javascript ternary 'c ? x : y' operator.
-Note that the "natural" Metascript _if_ should be written with in a 'Lisp style', with a condition and a tuple containing the two branches:
-
-```
-if ok
-  activate engine
-  stop
-```
-
-However the _else_ keyword is provided to enhance the readability of _if_ expressions.
-This is relevant when writing macros because the _else_ keywords are stripped away during the parse phase and are not present in the AST used for macro expansion.
 
 #### do
 
