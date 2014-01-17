@@ -456,8 +456,8 @@ describe('Meta.Compiler', function () {
       ]), 'if(a, if(b, c))');
 
       compareArrayToExpressionString(combineArray([
-        'if (if a (b, c)) d'
-      ]), 'if(if(a, <tuple>(b, c)), d)');
+        'if (if a (b + c) else x) d else y'
+      ]), 'if(if(a, +(b, c), x), d, y)');
 
       compareArrayToExpressionString(combineArray([
         'if a do', '  b', '  c'
@@ -477,7 +477,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         'if a b else c'
-      ]), 'if(a, <tuple>(b, c))');
+      ]), 'if(a, b, c)');
 
       compareArrayToExpressionString(combineArray([
         'if a (b, c)'
@@ -485,11 +485,11 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         'if a b', 'else c'
-      ]), 'if(a, <tuple>(b, c))');
+      ]), 'if(a, b, c)');
 
       compareArrayToExpressionString(combineArray([
         'if a do', '  t1', '  t2', 'else do', '  t3', '  t4'
-      ]), 'if(a, <tuple>(<do>(t1, t2), <do>(t3, t4)))');
+      ]), 'if(a, <do>(t1, t2), <do>(t3, t4))');
 
       compareArrayToExpressionString(combineArray([
         '(a, b) -> b'
@@ -523,6 +523,11 @@ describe('Meta.Compiler', function () {
       compareArrayToExpressionString(combineArray([
         'if if a b c'
       ]), 'if(if(a, b), c)', [
+        {
+          line: 1,
+          column: 3,
+          message: 'branch cannot produce a value'
+        },
         {
           line: 1,
           column: 3,
