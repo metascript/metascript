@@ -2,7 +2,7 @@ require 'should'
 
 meta
   macro 'describe'
-    predecence: KEY
+    precedence: KEY
     arity: binaryKeyword
     expand: do
       var code = \<- describe
@@ -15,7 +15,7 @@ meta
 
 meta
   macro 'it'
-    predecence: KEY
+    precedence: KEY
     arity: binaryKeyword
     expand: do
       var code = \<- it
@@ -140,7 +140,7 @@ it 'Should handle constructors'
 it 'Should handle a simple macro'
   meta
     macro "moo"
-      predecence: KEY
+      precedence: KEY
       expand: do
         var code = \<- ('moo ' + (arg))
         code.replaceTag('arg', expr.argAt(0))
@@ -152,7 +152,7 @@ it 'Should handle a simple macro'
 it 'Should handle a macro involving \"this\"'
   meta
     macro "@@@"
-      predecence: KEY
+      precedence: KEY
       expand: do
         var code = \<- this.arg
         code.replaceTag('arg', expr.argAt(0))
@@ -167,7 +167,7 @@ it 'Should handle a macro involving \"this\"'
 it 'Should have a proper \"@\" operator'
   meta
     macro '@'
-      predecence: KEY
+      precedence: KEY
       expand: do
         var member = expr.argAt(0)
         var code =
@@ -190,7 +190,7 @@ it 'Should have a proper \"@\" operator'
 it 'Should have macros that rename variables'
   meta
     macro 'vTagTest'
-      predecence: KEY
+      precedence: KEY
       expand: do
         var count = expr.argAt(0)
         var code = \<- do
@@ -257,18 +257,17 @@ it 'Can replace tags with arrays inside code'
 
 meta
   macro '\\->'
-    predecence: LOW
+    precedence: LOW
     arity: binary
     expand: do
-      console.log('\\->')
       var replacements = expr.argAt(0)
       if (!replacements.isObject()) do
         expr.error('Object literal expected')
-        give ()
+        return ()
       var code = expr.argAt(1)
       var codeTag = \<- \codeTag
       var result = \<- do
-        var codeTag = code
+        var codeTag = \<- code
         tagReplacements
         give codeTag
       var tagReplacements = []
@@ -278,87 +277,144 @@ meta
           if (! (replacement.isProperty() && replacement.argAt(0).isTag())) do
             replacement.error('Tag definition expected')
             ok = false
-          var replacementTag = replacement.argAt(0)
-          console.log('  replacement   : ' + replacement.toExpressionString())
-          console.log('  replacementTag: ' + replacementTag.toExpressionString())
-          console.log('  replacementTag.val: ' + replacementTag.val)
-          console.log('  replacementTag.getTag(): ' + replacementTag.getTag())
-          console.log('  replacement.argAt(0).getTag()   : ' + replacement.argAt(0).getTag())
-          ; var tagName = replacement.argAt(0).getTag()
-          var tagName = replacement.argAt(0).val
+          var tagName = replacement.argAt(0).getTag()
           var quotedTagName = \<- 'name'
-          console.log('  quotedTagName: ' + quotedTagName.toExpressionString())
           quotedTagName.val = tagName
-          console.log('  quotedTagName: ' + quotedTagName.toExpressionString())
-          var tagReplacement = \<- (codeTag.replageTag(quotedTagName, replacement))
+          var tagReplacement = \<- (codeTag.replaceTag(quotedTagName, replacement))
           tagReplacement.replaceTag('codeTag', codeTag)
           tagReplacement.replaceTag('quotedTagName', quotedTagName)
           tagReplacement.replaceTag('replacement', replacement.argAt(1))
           tagReplacements.push tagReplacement
-          console.log('  REPLACEMENT: ' + tagReplacement.toExpressionString())
-      give \<- null
-
-
-
+      if (!ok)
+        give \<- null
+      result.replaceTag('codeTag', codeTag)
+      result.replaceTag('code', code)
+      result.replaceTag('tagReplacements', tagReplacements)
+      give result
 
 
 meta
   macro 'async'
-    predecence: KEY
-    arity: zero
+    precedence: KEY
+    arity: optional
     expand: ()
 
 meta
   macro 'now'
-    predecence: KEY
+    precedence: LOW
     arity: unary
     expand: do
+      var declarations = []
+      var callbacksTagMap = new Object(null)
+      var callbacksCodeMap = new Object(null)
+      var thenCallbackTag = null
+      var thenCallbackCode = null
       var body = expr.argAt(0)
-      console.log('BODY START: ' + body.toExpressionString())
-      var whenMap = new Object(null)
       loop (var i = 0) do
-        if (i >= body.argCount()) end
-        var arg = body.argAt(i)
+        if (i >= expr.argCount()) end
+        var arg = expr.argAt(i)
         if (arg.id() == 'when') do
-          console.log('  WHEN: ' + arg.toExpressionString())
-          body.remove(arg)
+          var whenTag = arg.argAt(0)
+          var whenTagName = arg.argAt(0).getTag()
+          var whenTagCode = arg.argAt(1)
+          if (callbacksTagMap[whenTagName])
+            arg.error('Callback \"' + whenTagName + '\" already declared')
+          var declaration = {
+            whenTag: whenTag
+          } \-> (var whenTag = null)
+          declarations.push declaration
+          callbacksTagMap[whenTagName] = whenTag
+          callbacksCodeMap[whenTagName] = whenTagCode
+          expr.remove(arg)
           next (i)
         else if (arg.id() == 'then') do
-          console.log('  THEN: ' + arg.toExpressionString())
-          body.remove(arg)
+          if (thenCallbackTag != null) do
+            arg.error('Callback \"then\" already declared')
+          else do
+            thenCallbackTag = \<- \thenCallback
+            thenCallbackCode = arg.argAt(0)
+            var thenDclaration = \<- (var \thenCallback = null)
+            declarations.push thenDclaration
+          expr.remove(arg)
           next (i)
         else
           next (i + 1)
-      console.log('BODY END:   ' + body.toExpressionString())
-      give null
+      var processAsync = (e) -> do
+        if (e.id() == 'async') do
+          if (e.argCount() == 0) do
+            var tExp =
+              if (thenCallbackTag != null)
+                {
+                  thenCallbackCode : thenCallbackCode
+                } \-> (\thenCallback = thenCallbackCode)
+              else do
+                e.error('Callback \"then\" not declared')
+                give \<- null
+            tExp.forEachRecursive processAsync
+            e.replaceWith tExp
+          else do
+            var wName = e.argAt(0).getTag()
+            var wExp =
+              if (callbacksTagMap[wName]) do
+                give {
+                  whenCallbackTag : callbacksTagMap[wName]
+                  whenCallbackCode : callbacksCodeMap[wName]
+                } \-> (whenCallbackTag = whenCallbackCode)
+              else do
+                e.error('Callback \"' + wName + '\" not declared')
+                give \<- null
+            wExp.forEachRecursive processAsync
+            e.replaceWith wExp
+      body.forEachRecursive processAsync
+      var result = {
+        declarations: declarations
+        body: body
+      } \-> do
+        declarations
+        body
+      give result
 
-;var test = { foo: null } \->
-;  console.log('Meta')
 
 
 meta
   macro 'when'
-    predecence: KEY
+    precedence: LOW
     arity: binaryKeyword
     dependsFrom: 'now'
     expand: ()
 
 meta
   macro 'then'
-    predecence: KEY
+    precedence: LOW
     arity: unary
     dependsFrom: 'now'
     expand: ()
 
 
-now
-  console.log 'Now 1'
-when foo
-  () -> (console.log 'Foo')
-when bar
-  () -> (console.log 'Bar')
-then
-  () -> (console.log 'now then')
+it 'Gives a way out of callback hell'
+  var caller = (f) -> f()
+  var activityLog = []
+  var log = (x) -> activityLog.push x
+  now do
+    log 0
+    caller(async log1)
+  when log1 () -> do
+    log 1
+    caller(async log2)
+  when log2 () -> do
+    log 2
+    caller(async)
+  then () -> do
+  log 3
+  now do
+    log 4
+    caller(async)
+  then () -> do
+  log 5
+  activityLog.should.have.length 6
+  loop (var i = 0) do
+    if (i < activityLog.length) do
+      activityLog[i].should.equal i
+      next (i + 1)
+    else end
 
-
-)

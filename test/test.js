@@ -441,7 +441,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         '++a--'
-      ]), 'x--(++x(a))');
+      ]), '++x(x--(a))');
 
       compareArrayToExpressionString(combineArray([
         'f(a--)'
