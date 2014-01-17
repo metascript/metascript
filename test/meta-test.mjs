@@ -132,7 +132,7 @@ it 'Should handle string concatenation'
   ("Hello "+ obj.world()).should.equal('Hello world!')
 
 it 'Should handle constructors'
-  var C = (a) -> do
+  var C = (a) ->
     this.if = a
   var c = new C (4)
   c.should.have.property('if', 4)
@@ -195,8 +195,8 @@ it 'Should have macros that rename variables'
         var count = expr.argAt(0)
         var code = \<- do
           var \result = []
-          loop (var \i = 0) do
-            if (\i < count) do
+          loop (var \i = 0)
+            if (\i < count)
               \result.push(\i)
               next (\i + 1)
             else end
@@ -261,7 +261,7 @@ meta
     arity: binary
     expand: do
       var replacements = expr.argAt(0)
-      if (!replacements.isObject()) do
+      if (!replacements.isObject())
         expr.error('Object literal expected')
         return ()
       var code = expr.argAt(1)
@@ -274,7 +274,7 @@ meta
       var ok = true
       replacements.forEach
         (replacement) -> do
-          if (! (replacement.isProperty() && replacement.argAt(0).isTag())) do
+          if (! (replacement.isProperty() && replacement.argAt(0).isTag()))
             replacement.error('Tag definition expected')
             ok = false
           var tagName = replacement.argAt(0).getTag()
@@ -310,10 +310,10 @@ meta
       var thenCallbackTag = null
       var thenCallbackCode = null
       var body = expr.argAt(0)
-      loop (var i = 0) do
+      loop (var i = 0)
         if (i >= expr.argCount()) end
         var arg = expr.argAt(i)
-        if (arg.id() == 'when') do
+        if (arg.id() == 'when')
           var whenTag = arg.argAt(0)
           var whenTagName = arg.argAt(0).getTag()
           var whenTagCode = arg.argAt(1)
@@ -327,8 +327,8 @@ meta
           callbacksCodeMap[whenTagName] = whenTagCode
           expr.remove(arg)
           next (i)
-        else if (arg.id() == 'then') do
-          if (thenCallbackTag != null) do
+        else if (arg.id() == 'then')
+          if (thenCallbackTag != null)
             arg.error('Callback \"then\" already declared')
           else do
             thenCallbackTag = \<- \thenCallback
@@ -340,8 +340,8 @@ meta
         else
           next (i + 1)
       var processAsync = (e) -> do
-        if (e.id() == 'async') do
-          if (e.argCount() == 0) do
+        if (e.id() == 'async')
+          if (e.argCount() == 0)
             var tExp =
               if (thenCallbackTag != null)
                 {
@@ -352,7 +352,7 @@ meta
                 give \<- null
             tExp.forEachRecursive processAsync
             e.replaceWith tExp
-          else do
+          else
             var wName = e.argAt(0).getTag()
             var wExp =
               if (callbacksTagMap[wName]) do
@@ -395,7 +395,7 @@ it 'Gives a way out of callback hell'
   var caller = (f) -> f()
   var activityLog = []
   var log = (x) -> activityLog.push x
-  now do
+  now
     log 0
     caller(async log1)
   when log1 () -> do
@@ -412,8 +412,8 @@ it 'Gives a way out of callback hell'
   then () -> do
   log 5
   activityLog.should.have.length 6
-  loop (var i = 0) do
-    if (i < activityLog.length) do
+  loop (var i = 0)
+    if (i < activityLog.length)
       activityLog[i].should.equal i
       next (i + 1)
     else end

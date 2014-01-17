@@ -481,7 +481,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         'if a (b, c)'
-      ]), 'if(a, <tuple>(b, c))');
+      ]), 'if(a, <do>(b, c))');
 
       compareArrayToExpressionString(combineArray([
         'if a b', 'else c'
@@ -550,8 +550,8 @@ describe('Meta.Compiler', function () {
   describe('#resolve()', function () {
     it('Should resolve symbols', function () {
       compareArrayToExpressionString(resolveArray([
-        'do',  'var (a, b)', 'a b'
-      ]), '<do>(<tuple>(a, b), <call>(a, b))');
+        'do',  'var (a = 0, b = 0)', 'a b'
+      ]), '<do>(<do>(=(a, 0), =(b, 0)), <call>(a, b))');
 
       compareArrayToExpressionString(resolveArray([
         '(a, b) -> (a b)'
@@ -602,9 +602,9 @@ describe('Meta.Compiler', function () {
 
     it('Should detect illegal assignments', function () {
       compareArrayToExpressionString(resolveArray([
-        'do', 'const (a, b)', 'a = b'
+        'do', 'const (a = 0, b = 1)', 'a = b'
       ]),
-      '<do>(<tuple>(a, b), =(a, b))', [
+      '<do>(<do>(=(a, 0), =(b, 1)), =(a, b))', [
         {
           line: 3,
           column: 0,
