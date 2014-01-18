@@ -1,5 +1,5 @@
 {
-  "name": "metascript",
+  "name": "Metascript",
   "version": "0.0.1",
   "author": "Massimiliano Mantione <massimiliano.mantione@gmail.com>",
   "description": "A language with a compiler that targets Javascript.",
