@@ -227,6 +227,63 @@ var status =
 
 The meaning should be clear: status will be either 'moving' or 'stopped', the _if_ works like an expression selecting one of the two values, and the two _do_ code blocks execute 'statements' (they evaluate expressions but discard their values) but they also 'return' values so that the _if_ expression can use them.
 
+#### Data flow considerations
+
+The Metascript compiler performs some basic data flow analysis on the code it processes.
+Particularly, it checks the following:
+- that every assignment has an assignable expression on its left side,
+- that every expression produces the required value (or values),
+- that every variable has been declared in the current scope,
+- that every variable is not used undefined (this is still unimplemented), and
+- that every block is properly terminated (this is also unimplemented and could be made useless by another planned change).
+
+Every expression is evaluated in a context where a certain number of result values is required. For instance, consider the following assignment:
+
+```
+var a = b + c
+```
+
+Here the expression _b + c_ needs to produce one result because the assignment requires one value. In the following example, however, the expression needs to produce two values:
+
+```
+(o.x, o.y) = (x + dx, y + dy)
+```
+
+and in fact it is a tuple of length two. And, of course, the following example will cause a compile error:
+
+```
+var m = (x, y)
+```
+
+The rules are simple:
+- Assignable expressions are:
+    - variables and function arguments, and
+    - the result of _member_ expressions (either _x.y_ or x[y]).
+- Assignment operators count the number of expressions on their left, check that they are assignable, and require an equal number of values on the right.
+- _if_ and _do_ expressions must produce the number of results required from their context
+    - _if_ expressions produce results by simply evaluating them
+    - since _do_ expressions already evaluate a sequence of expressions, a _give_ statement is required to specify the result of the _do_
+- Function invocations are like a binary operator that requires one value on the left (the callee) and an argument on the right, which can be a tuple (the arguments).
+- Every other operator requires exactly one value for each operand.
+
+In Metascript it is necessary to specify the _do_ keyword every time a tuple is provided in a context where values are required but it must not be evaluated as a tuple. In this case the result of the _do_ expression (which _could_ be a tuple!) must be provided by a _give_ expression.
+Of course _give_ expressions can be used inside conditional statements (_if_ branches), in any case when "evaluated" they terminate the current _do_ block and provide its result(s).
+
+I am considering making a _give_ at the end of a _do_ optional, assuming that the last expression of the _do_ sequence will be its result, but I have not yet decided about it (the suggestion came from [Bamboo](http://bamboo.github.io/), the desigmer of [Boo](http://boo.codehaus.org/)). This is the change that would make block termination checks useless. With this change the above example could be written like this:
+
+```
+var status =
+  if ok do
+    console.log 'Starting up'
+    engine.power 100
+    'moving'
+  else do
+    console.log 'Stopping'
+    engine.power 0
+    'stopped'
+```
+
+
 #### loop
 
 Metascript has only one kind of _loop_ expression, and it tries to mimic the syntax of tail recursive invocations (but it generates plain loops in Javascript). Just like in Lisp-like languages, other looping constructs can be defined with macros.
@@ -256,6 +313,15 @@ The _next_ and _give_ keywords are one of the few Metascript constructs that are
 
 _TODO_ Explain better why I choose this as the only looping primitive and how every other loop construct can be implemented as a macro (and there will be a standard library of such macros).
 
+### Variable declarations
+
+Metascript, like Cofeescript, tries to shield the programmer from subtle errors that can creep into Javascript programs when an undeclared variable is assigned (which causes the creation of a new member of the global object).
+
+However in Metascript the rules are different: the programmer must explicitly declare every variable.
+Metascript puts every declaration at the beginning of the local "Javascript scope" in the generated code (which means either the beginning of the compilation unit, or the beginning of the current function), but it handles naming resolution like if the language had block scoping.
+Moreover, Metascript does not allow the declaration of a variable with a name already used in the current scope (in this case I mean _block_ scope and not _function_ scope). I made this choice because scoping (and captured variables) are really important in Javascript, and I think that redefined names cause ambiguities reading code and should be avoided. Moreover, with this rule, if one does never relies on the value of undefined variables (note, _undefined_, not just _undeclared_!), for all practical purposes Metascript provides variable declarations with local scoping which IMHO is a very desirable thing to have.
+And since the data flow analysis performed by the Metascript compiler disallows uses of undefined variables local (this piece of analysis is still unimplemented) using an undefined variable is not possible anyway.
+
 ### Function definitions
 
 Functions are defined as expressions using the '->' operator (the resulting value must be used or assigned somwehere), with a syntax just like the Cofeescript one:
@@ -275,6 +341,15 @@ square = (x) ->
 cube = (x) ->
   square(x) * x
 ```
+
+About data flow analysis, the body of a function definition is handled as following:
+- if it is:
+    - a _do_ expression,
+    - an non empty tuple, or
+    - a _return_ expression
+  it is assumed to provide no return value, otherwise
+- the compiler will produce a return statement and will assume that the body expression must produce exactly one value, which will be returned by the function.
+This way the programmer can always write very concise code but the compiler will anyway be able to perform data flow analysis with no ambiguities.
 
 ### _TODO:_ try, catch, finally
 
@@ -311,5 +386,7 @@ TODO list
     - small useful operators
     - 'double arrow' functions
 - Settle on an API for a module system for macros (meta-modules!)
+- Document the AST API that can be used inside macros.
+- Wire the code to generate try-catch-finally
 - Implement the type system
 - Finish this TODO list :-)
