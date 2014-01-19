@@ -254,7 +254,7 @@ it 'Can replace tags with arrays inside code'
   a.should.equal 2
 
 meta
-  macro '\\->'
+  macro '\\<->'
     precedence: LOW
     arity: binary
     expand: do
@@ -319,7 +319,7 @@ meta
             arg.error('Callback \"' + whenTagName + '\" already declared')
           var declaration = {
             whenTag: whenTag
-          } \-> (var whenTag = null)
+          } \<-> (var whenTag = null)
           declarations.push declaration
           callbacksTagMap[whenTagName] = whenTag
           callbacksCodeMap[whenTagName] = whenTagCode
@@ -344,7 +344,7 @@ meta
               if (thenCallbackTag != null)
                 {
                   thenCallbackCode : thenCallbackCode
-                } \-> (\thenCallback = thenCallbackCode)
+                } \<-> (\thenCallback = thenCallbackCode)
               else do
                 e.error('Callback \"then\" not declared')
                 give \<- null
@@ -357,7 +357,7 @@ meta
                 give {
                   whenCallbackTag : callbacksTagMap[wName]
                   whenCallbackCode : callbacksCodeMap[wName]
-                } \-> (whenCallbackTag = whenCallbackCode)
+                } \<-> (whenCallbackTag = whenCallbackCode)
               else do
                 e.error('Callback \"' + wName + '\" not declared')
                 give \<- null
@@ -367,7 +367,7 @@ meta
       var result = {
         declarations: declarations
         body: body
-      } \-> do
+      } \<-> do
         declarations
         body
       give result
@@ -416,3 +416,25 @@ it 'Gives a way out of callback hell'
       next (i + 1)
     else end
 
+
+meta
+  macro "while"
+    precedence: LOW
+    arity: binaryKeyword
+    expand: do
+      var code = \<- loop ()
+        if (!(condition))
+          end
+        else
+          body
+          next ()
+      code.replaceTag('condition', expr.argAt(0))
+      code.replaceTag('body', expr.argAt(1))
+      give code
+
+it 'Even has a while statement!'
+  var (c = 1, r = '')
+  while (c <= 3)
+    r += c
+    c = c + 1
+  r.should.equal '123'

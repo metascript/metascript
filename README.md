@@ -6,14 +6,17 @@ The main goal is to have a language that can have a readable syntax, and at the 
 Another goal is to have a type system, for optionally performing static type checking (with type inference).
 
 
-Project status
+Project Status
 --------------
 
 There is a library (npm module) implementing the compiler, and everything described below already works.
+To run the tests, do the following:
+- clone the repository at "https://github.com/massimiliano-mantione/metascript", then
+- run "npm install" and "npm test".
 Have a look at the TODO list at the end to see what's coming next.
 
 
-A quick taste of the language
+A Quick Taste of the Language
 -----------------------------
 
 Our favorite first statement:
@@ -84,7 +87,7 @@ Several other languages have inspired me in various ways:
 
 In the end I decided that none of them fits my bill completely, and I implemented Metascript.
 
-Basic syntax
+The Metascript Language
 ------------
 
 The goal is to have a language that can have a readable syntax (inspired by Coffeescript), and at the same time allow lisp-style metaprogramming (macros that can manipulate the AST).
@@ -145,7 +148,7 @@ console log 'The above line is a comment.'
 
 which means that ending lines with semicolons is harmless but useless :-)
 
-### Control flow expressions
+### Control Flow Expressions
 
 #### if
 
@@ -322,7 +325,7 @@ Metascript puts every declaration at the beginning of the local "Javascript scop
 Moreover, Metascript does not allow the declaration of a variable with a name already used in the current scope (in this case I mean _block_ scope and not _function_ scope). I made this choice because scoping (and captured variables) are really important in Javascript, and I think that redefined names cause ambiguities reading code and should be avoided. Moreover, with this rule, if one does never relies on the value of undefined variables (note, _undefined_, not just _undeclared_!), for all practical purposes Metascript provides variable declarations with local scoping which IMHO is a very desirable thing to have.
 And since the data flow analysis performed by the Metascript compiler disallows uses of undefined variables local (this piece of analysis is still unimplemented) using an undefined variable is not possible anyway.
 
-### Function definitions
+### Function Definitions
 
 Functions are defined as expressions using the '->' operator (the resulting value must be used or assigned somwehere), with a syntax just like the Cofeescript one:
 
@@ -365,13 +368,259 @@ I plan to implement a _switch_ expression that
 - can be easily extended with various matching patterns in case statements
 but I still have to do it :-)
 
+### Compound Literal Values
+
+Metascript supports array and object literals exactly like Javascript, and uses roughly the same syntax to define them (_[]_ for arrays and _{}_ for objects).
+The only difference comes from the fact that indentation rules can be used inside literals, too.
+
+The trick is the following:
+- If, after an open _[_ or _{_, something is written on the _same_ line, the parser stais in _()_ mode and expects commas as separators for the value elements (or properties).
+- If, on the other hand, a newline is found immediately after the opening of the literal, the following block will be taken as the onject content (using newlines as separators and following the indentation rules).
+
+This is best shown with an example, in which we have two identical definitions:
+
+```
+var obj1 = {a: 1, b: 2}
+var obj2 = {
+  a: 1
+  b: 2
+}
+```
+
+I know that Cofeescript allows the programmer to omit _{}_ braces entirely when defining object literals, and I consciously decided to take a different route and make them mandatory. Doing otherwise would have created way too many ambiguities in the parser (and, IMHO, also in reading code). Moreover, it is really easy to write a macro that builds an object literal without requiring braces! (more about this in the _Metaprogramming_ section)
+
+### String Interpolation and "heredoc" Strings
+
+_TODO_: please note that this is still not implemented in the parser, I plan to do it soon.
+Metascript does not really provide string interpolation, however it allows to concatenate strings and the results of other expressions very easily.
+The trick is the following: even with string interpolation, one usually must introduce some kind of "delimitation character" in the string to separate the expressions from the string literal (something like "The distance is ${speed * time} meters").
+Without string interpolation, the above string would need to be written with this expression:
+
+```
+var s = "The distance is " + (speed * time) + "  meters"
+```
+
+and what is annoying is that the programmer must write both the quotes and the _+_ operators.
+However, one can note that the following expression would be illegal
+
+```
+var s = "The name is " name
+```
+
+because the parser, finding no operator, would attempt to produce a function call where the callee is the string literal, which makes no sense and would cause a runtime error.
+Since the expression would be illegal it would be nice to use that kind of construct in a useful way.
+
+Therefore Metascript supports an abbreviated form of string concatenation, like this:
+
+```
+var s1 = "The distance is " (speed * time) "  meters"
+var s2 = "The full name is " surname " " name
+```
+
+which for practical purposes works just like string interpolation, and is translated into the following code:
+
+```
+var s1 = "The distance is " + (speed * time) + "  meters"
+var s2 = "The full name is " + surname + " " + name
+```
+
+Also having a string that "calls a tuple" (another construct that would make no sense) is translated into a repeated concatenation of the string with every element of the tuple, allowing code like this:
+
+```
+var longString = ''
+  'One string, '
+  'another string, '
+  'one more string...'
+var interpretedAs '' 'One string, ' 'another string, ' 'one more string...'
+var whichMeans '' + 'One string, ' + 'another string, ' + 'one more string...'
+```
+
+Finally, Metascript supports "heredoc" strings, which start with three consecutive quotes followed by anything (even the empty string) and then a newline, and are closed by a line starting with exactly the same sequence of characters (including the quotes), like this:
+
+```
+var longString = '''end
+One line,
+another line,
+one more line...
+'''end
+```
+
+Note that _end_ in the above example can be anything, even the empty string, it is used only to make it easier for the programmer to produce long strings that contain lines that start with exactly three consecutive quotes...
 
 Metaprogramming
 ---------------
 
-_TODO:_ Explain macros
+Metascript supports metaprogramming allowing the developer to write macros that modify the AST at compile time. This makes the language extensible because macros can define new language constructs. It is also practical because new keywords and operators can be added to make code easier to read (and less tedious to write!).
 
-TODO list
+Let's see, as an initial example, how to define an operator that, like Coffescript's _@_, translates into "_this._" in the final program:
+
+```
+meta
+  macro '@'
+    precedence: KEY
+    expand: do
+      var member = expr.argAt(0)
+      var code =
+        if (member.isTag())
+          \<- this.member
+        else
+          \<- this[member]
+      code.replaceTag('member', member)
+      give code
+```
+
+This macro could be used in the following way:
+```
+var obj = {
+  a: 1
+  b: 2
+  aaa: 42
+  m1: () -> (@a + @b)
+  m2: (x, y) -> @(x + y)
+}
+obj.m1().should.equal(3)
+obj.m2('a', 'aa').should.equal(42)
+```
+
+In Metascript the _meta_ keyword introduces metaprogramming statements.
+The _macro_ statement defines a new macro, and it must be followed by the string that represents the new operator (or keyword), in this case _@_.
+Then a few properties must be specified, with a syntax like the one used in properties in object literals:
+- _arity_ to specify the number of arguments of the operator, it defaults to 'unary', other useful values are 'binary', 'optional' (for as keyword that might or might not have an operand), 'zero', or others that will be documented later.
+- _precedence_ defines the operator precedence (_TODO_: document the precedence table), defaults to 'KEY'.
+- _dependsFrom_ is for keywords that must work together with others to build more complex constructs (like _catch_ is related to _try_, or _else_ is related to _if_).
+- _expand_ is the only mandatory property, it provides the code that implements the macro.
+
+The macro implementation has two variables in its scope:
+- _expr_ is the root of the AST tree where the macro must be expanded (in the above example _expr_ will be _@a_, _@b_ and then _@(x + y)_).
+- _meta_ is an object that represents the compilation environment (still undocumented, will be useful in complex code generation scenarios, and can be ignored for now).
+
+In the above example the macro does the following (remember that it runs at _compile_ time, at every use of the defined symbol in the source code):
+- it extracts the argument passed to the _@_ operator (with _expr.argAt(0)_)
+- it checks if it is a "tag" (which means an identifier) or not
+Now we must explain what _code quoting_ is.
+In Metascript the _\\->_ operator is the _quote_ operator for parse trees, it is the one that provides the macros new peices of code to put into the final program.
+In the above example we have two such snippets of code:
+- _this.member_, which makes sense if _member_ is a tag, and
+- _this[member]_, which must be used otherwise.
+The macro code selects the correct code snippet and assigns it to the _code_ variable.
+Now in the macro code we have assigned two variables:
+- _member_, with the _@_ operand, and
+- _code_, with the code we want to put in the program instead of the _@_ operator.
+By invoking _code.replaceTag('member', member)_ we replace _member_ (the _@_ operand) with "member" in the code snippet. After that, the code snippet is exactly what we want, and it can be returned.
+
+The Metascript compiler will then replace the _@_ occurrence with the code returned by the _expand_ function in the macro definition.
+This will make the two method definitions look like this:
+
+```
+  m1: () -> (this.a + this.b)
+  m2: (x, y) -> this[x + y]
+```
+
+Of course this is a very simple macro.
+More complex ones can accomplish more useful tasks.
+For instance if we wanted to have a _while_ statement in Metascript. the following macro implements it easily:
+
+```
+meta
+  macro "while"
+    precedence: LOW
+    arity: binaryKeyword
+    expand: do
+      var code = \<- loop ()
+        if (!(condition))
+          end
+        else
+          body
+          next ()
+      code.replaceTag('condition', expr.argAt(0))
+      code.replaceTag('body', expr.argAt(1))
+      give code
+```
+
+After this macro we can write something like this:
+
+```
+var (c = 1, r = '')
+while (c <= 3)
+  r += c
+  c = c + 1
+r.should.equal '123'
+```
+
+and of course the test would pass.
+
+How the macro works should be obvious: _code_ contains the "skeleton" of the code we want to emit, then we replace _condition_ and _body_ with the _while_ expression arguments and we return the resulting piece of code.
+
+
+
+Another useful macro that can be written is a "quote code and replace tags", very useful in writing macros!
+It can be found in the tests, anyway it works like this:
+
+```
+{
+  tag1: replacement1
+  tag2: replacement2
+  ...
+} \<-> quotedCode
+```
+
+So, the _\\<->_ operator takes an object literal and a piece of code, and it repeatedly invokes _replaceTag_ on the code, once for every property of the object literal.
+With this operator the _while_ macro can be written in the following way:
+
+```
+meta
+  macro "while"
+    precedence: LOW
+    arity: binaryKeyword
+    expand: do give
+      {
+        condition: expr.argAt(0)
+        body: expr.argAt(1)
+      } \<-> loop ()
+        if (!(condition))
+          end
+        else
+          body
+          next ()
+```
+
+which is more concise and readable.
+
+Then I should write an _unquote_ macro, which should be used inside quoted code to insert pieces of code that will provide a local replacement (like an "inline macro").
+Since it is the opposite of "quoting" I would give the macro the _\\->_ symbol.
+With that macro the _while_ definition would become the following:
+
+```
+meta
+  macro "while"
+    precedence: LOW
+    arity: binaryKeyword
+    expand: do give \<-
+      loop ()
+        if (! \-> expr.argAt(0))
+          end
+        else
+          \-> expr.argAt(1)
+          next ()
+```
+
+Another useful Metascript feature is the ability of producing variables with unique names when expanding macros, without forcing the programmer to explicitly call "gensym"-like functions (for those that know Lisp and Scheme, this means that Metascript makes it easy to write [hygienic macros](http://en.wikipedia.org/wiki/Hygienic_macro).
+To make use of the feature the programmer needs to use the _\\_ operator before identifiers that must be made unique, like this:
+
+```
+var code = \<- do
+  var \condition = f(g)
+  if (\condition) ...
+```
+
+Every time a macro containing that quoted code will be expanded, _condition_ will get a unique identifier. Therefore multiple uses of the macro in the same scope will not cause problems with redeclarations of the same variable.
+
+This introduction only scratches the surface of metaprogramming.
+
+I hope that it at least makes it clear why I kept the core of the Metascript language very small: everybody has his opinions about which constructs a programming language should provide, and I am pretty sure that I cannot make everyone happy. At least in this way everybody can  extend the language as he pleases.
+Moreover, this will make the implementation of "global" features easier. For instance, think about the introduction of a type system: since there are only a handful of base language constructs, it is easier to implement type checking for them than how it would be for a language that needs to provide more "builtin features" because it cannot be extended.
+
+TODO List
 ---------
 
 - Organize the todo list as issues that can be tracked on Github
@@ -385,6 +634,7 @@ TODO list
     - switch
     - small useful operators
     - 'double arrow' functions
+- Implement the trick about string interpolation
 - Settle on an API for a module system for macros (meta-modules!)
 - Document the AST API that can be used inside macros.
 - Wire the code to generate try-catch-finally
