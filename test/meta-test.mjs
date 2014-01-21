@@ -4,25 +4,25 @@ meta
   macro 'describe'
     precedence: KEY
     arity: binaryKeyword
-    expand: do
+    expand:
       var code = \<- describe
         item
         () -> body
       code.replaceTag('item', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
-      give code
+      code
 
 meta
   macro 'it'
     precedence: KEY
     arity: binaryKeyword
-    expand: do
+    expand:
       var code = \<- it
         item
         () -> body
       code.replaceTag('item', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
-      give code
+      code
 
 describe 'Metascript' (
 
@@ -151,10 +151,10 @@ it 'Should handle a macro involving \"this\"'
   meta
     macro "@@@"
       precedence: KEY
-      expand: do
+      expand:
         var code = \<- this.arg
         code.replaceTag('arg', expr.argAt(0))
-        give code
+        code
   var obj = {
     a: 1
     b: 2
@@ -166,7 +166,7 @@ it 'Should have a proper \"@\" operator'
   meta
     macro '@'
       precedence: KEY
-      expand: do
+      expand:
         var member = expr.argAt(0)
         var code =
           if (member.isTag())
@@ -174,7 +174,7 @@ it 'Should have a proper \"@\" operator'
           else
             \<- this[member]
         code.replaceTag('member', member)
-        give code
+        code
   var obj = {
     a: 1
     b: 2
@@ -189,7 +189,7 @@ it 'Should have macros that rename variables'
   meta
     macro 'vTagTest'
       precedence: KEY
-      expand: do
+      expand:
         var count = expr.argAt(0)
         var code = \<- do
           var \result = []
@@ -198,9 +198,9 @@ it 'Should have macros that rename variables'
               \result.push(\i)
               next (\i + 1)
             else end
-          give \result
+          \result
         code.replaceTag('count', count)
-        give code
+        code
   var vTagTestN = vTagTest 3
   vTagTestN.should.have.length(3)
   vTagTestN.should.have.property(0, 0)
@@ -240,7 +240,7 @@ it 'Can replace tags with arrays inside code'
   meta
     macro 'addTwice'
       arity: binary
-      expand: do
+      expand:
         var left = expr.argAt(0)
         var right = expr.argAt(1)
         var code = \<- (left += right)
@@ -248,7 +248,7 @@ it 'Can replace tags with arrays inside code'
         code.replaceTag('right', right)
         var result = \<- (do code)
         result.replaceTag('code', [code, code])
-        give result
+        result
   var a = 0
   a addTwice 1
   a.should.equal 2
@@ -257,7 +257,7 @@ meta
   macro '\\<->'
     precedence: LOW
     arity: binary
-    expand: do
+    expand:
       var replacements = expr.argAt(0)
       if (!replacements.isObject())
         expr.error('Object literal expected')
@@ -267,11 +267,11 @@ meta
       var result = \<- do
         var codeTag = \<- code
         tagReplacements
-        give codeTag
+        codeTag
       var tagReplacements = []
       var ok = true
       replacements.forEach
-        (replacement) -> do
+        (replacement) ->
           if (! (replacement.isProperty() && replacement.argAt(0).isTag()))
             replacement.error('Tag definition expected')
             ok = false
@@ -288,7 +288,7 @@ meta
       result.replaceTag('codeTag', codeTag)
       result.replaceTag('code', code)
       result.replaceTag('tagReplacements', tagReplacements)
-      give result
+      result
 
 
 meta
@@ -301,7 +301,7 @@ meta
   macro 'now'
     precedence: LOW
     arity: unary
-    expand: do
+    expand:
       var declarations = []
       var callbacksTagMap = new Object(null)
       var callbacksCodeMap = new Object(null)
@@ -353,8 +353,8 @@ meta
           else
             var wName = e.argAt(0).getTag()
             var wExp =
-              if (callbacksTagMap[wName]) do
-                give {
+              if (callbacksTagMap[wName])
+                {
                   whenCallbackTag : callbacksTagMap[wName]
                   whenCallbackCode : callbacksCodeMap[wName]
                 } \<-> (whenCallbackTag = whenCallbackCode)
@@ -370,7 +370,7 @@ meta
       } \<-> do
         declarations
         body
-      give result
+      result
 
 
 
@@ -444,3 +444,4 @@ it 'Still supports simple expressions'
   ('a' + 'b' + 'c').should.equal "abc"
   (typeof (1 + 2)).should.equal 'number'
   (typeof {}).should.equal 'object'
+  (do (var a = 'a', a = a + a, a)).should.equal "aa"
