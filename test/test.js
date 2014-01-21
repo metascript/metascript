@@ -469,7 +469,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         'a do k', 'b', 'do', 'c', 'd'
-      ]), '<call>(a, <do>(<call>(k, <tuple>(b, <do>(c, d)))))');
+      ]), '<call>(a, <do>(<call>(k, <tuple>(b, <do>(c, give(d))))))');
 
       compareArrayToExpressionString(combineArray([
         'x = y = z'

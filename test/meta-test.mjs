@@ -54,7 +54,7 @@ it 'Should handle loops'
       if (x > 0)
         next (r * x, x - 1)
       else
-        give r
+        r
   f(1).should.equal(1)
   f(2).should.equal(2)
   f(3).should.equal(6)
@@ -438,3 +438,9 @@ it 'Even has a while statement!'
     r += c
     c = c + 1
   r.should.equal '123'
+
+it 'Still supports simple expressions'
+  (1 + 2 * 3).should.equal 7
+  ('a' + 'b' + 'c').should.equal "abc"
+  (typeof (1 + 2)).should.equal 'number'
+  (typeof {}).should.equal 'object'
