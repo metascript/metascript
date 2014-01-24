@@ -160,7 +160,7 @@ it 'Should handle a macro involving \"this\"'
     b: 2
     m: () -> (@@@a + @@@b)
   }
-  (obj.m()).should.equal(3)
+  obj.m().should.equal 3 
 
 it 'Should have a proper \"@\" operator'
   meta
@@ -182,8 +182,8 @@ it 'Should have a proper \"@\" operator'
   obj['aaa'] = 42
   obj.m1 = () -> (@a + @b)
   obj.m2 = (x, y) -> @(x + y)
-  (obj.m1()).should.equal(3)
-  (obj.m2('a', 'aa')).should.equal(42)
+  obj.m1().should.equal 3
+  obj.m2('a', 'aa').should.equal 42
 
 it 'Should have macros that rename variables'
   meta
@@ -372,8 +372,6 @@ meta
         body
       result
 
-
-
 meta
   macro 'when'
     precedence: LOW
@@ -430,7 +428,7 @@ meta
           next ()
       code.replaceTag('condition', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
-      give code
+      code
 
 it 'Even has a while statement!'
   var (c = 1, r = '')
@@ -445,3 +443,106 @@ it 'Still supports simple expressions'
   (typeof (1 + 2)).should.equal 'number'
   (typeof {}).should.equal 'object'
   (do (var a = 'a', a = a + a, a)).should.equal "aa"
+
+it 'Can write macros better'
+  meta
+    macro "@@@"
+      precedence: KEY
+      expand:
+        { arg: expr.argAt(0) } \<->
+          this.arg
+  var obj = {
+    a: 1
+    b: 2
+    m: () -> (@@@a + @@@b)
+  }
+  obj.m().should.equal 3 
+
+it 'Handles binary keywords properly'
+  var result =
+    if 1 + 1 == 2 true
+    else false
+  result.should.equal true
+
+meta
+  macro 'yield'
+    precedence: LOW
+    arity: unary
+    expand: ()
+
+meta
+  macro 'foreach'
+    precedence: LOW
+    arity: ternaryKeyword
+    expand: do
+      var declaration = expr.argAt(0)
+      var assignable = declaration.getAssignable()
+      var yielder = expr.argAt(1)
+      var body = expr.argAt(2)
+      var yieldCount = 0;
+      yielder.forEachRecursive
+        (e) -> do
+          if (e.id() == 'yield')
+            yieldCount += 1
+      if (yieldCount != 1) do
+        yielder.error('Found ' + yieldCount + ' yield occurrences instead of 1')
+        return ()
+      yielder.forEachRecursive
+        (e) -> do
+          if (e.id() == 'yield')
+            var value = e.argAt(0)
+            var assignment = {
+              assignable : assignable
+              value : value
+              body : body
+            } \<-> do
+              assignable = value
+              body
+            e.replaceWith assignment
+      give {
+        declaration: declaration
+        yielder: yielder
+      } \<-> do
+        declaration
+        yielder
+
+meta
+  macro 'indexesOf'
+    precedence: LOW
+    arity: unary
+    expand: do
+      give {
+        a: expr.argAt(0)
+      } \<-> loop (var \i = 0)
+        if (\i < a.length)
+          yield \i
+          next (\i + 1)
+        else
+          end
+
+meta
+  macro '..'
+    precedence: LOW
+    arity: binary
+    expand: do
+      give {
+        start: expr.argAt(0)
+        limit: expr.argAt(1)
+      } \<-> loop (var \i = start)
+        if (\i <= limit)
+          yield \i
+          next (\i + 1)
+        else
+          end
+
+
+it 'Has a prototype of foreach'
+  var a = [1, 2, 3]
+  var r = 0
+  foreach (var idx) (indexesOf a)
+    r += a[idx]
+  r.should.equal(1 + 2 + 3)
+  r = 0;
+  foreach (var v) (3 .. 5)
+    r += v
+  r.should.equal(3 + 4 + 5)

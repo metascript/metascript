@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "mocha": "*",
-    "should": "~2.0.2"
+    "should": "~2.0.2",
+    "source-map-support": "*"
   },
   "scripts": {
     "test": "mocha"
