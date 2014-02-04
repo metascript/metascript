@@ -9,7 +9,7 @@
   },
   "main": "./lib/meta",
   "bin": {
-    "metascript": "./lib/metascript"
+    "mjs": "./bin/mjs"
   },
   "dependencies": {
     "escodegen": ">=0.0.28"

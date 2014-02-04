@@ -1,5 +1,5 @@
 var fs = require('fs');
-var Meta = (require('../lib/meta'))();
+var Meta = require('../lib/meta')();
 
 var compiler = Meta.compilerFromFile('./test/meta-test.mjs');
 var js = compiler.compile();
