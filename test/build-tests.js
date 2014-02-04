@@ -1,8 +1,14 @@
-var fs = require('fs');
-var Meta = require('../lib/meta')();
+var exec = require('child_process').exec;
+require('should');
 
-var compiler = Meta.compilerFromFile('./test/meta-test.mjs');
-var js = compiler.compile();
-//compiler.logErrors();
 
-fs.writeFileSync('./test/meta-test.js', js);
+describe('mjs', function () {
+  it('Should compile the test suite', function() {
+    exec('./bin/mjs ./test/meta-test.mjs', function (error, stdout, stderr) {
+      // FIXME: this is not performing the test...
+      (error === null).should.equal(true);
+      stdout.should.have.length(0);
+      stderr.should.have.length(0);
+    });
+  });
+});
