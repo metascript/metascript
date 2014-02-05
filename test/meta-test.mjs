@@ -160,7 +160,7 @@ it 'Should handle a macro involving \"this\"'
     b: 2
     m: () -> (@@@a + @@@b)
   }
-  obj.m().should.equal 3 
+  obj.m().should.equal 3
 
 it 'Should have a proper \"@\" operator'
   meta
@@ -456,7 +456,7 @@ it 'Can write macros better'
     b: 2
     m: () -> (@@@a + @@@b)
   }
-  obj.m().should.equal 3 
+  obj.m().should.equal 3
 
 it 'Handles binary keywords properly'
   var result =
