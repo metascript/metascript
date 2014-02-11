@@ -122,6 +122,10 @@ describe('Meta.Compiler', function () {
       compareArrayToTokenDump(parseArray([
         'a <== b <!> -> _\\$/z'
       ]), '(b (l id:"a" op:"<==" id:"b" op:"<!>" op:"->" id:"_" op:"\\" id:"$" op:"/" id:"z"))');
+
+      compareArrayToTokenDump(parseArray([
+        'a #1 b #abc# #-> #_\\$/z'
+      ]), '(b (l id:"a" op:"#1" id:"b" op:"#abc#" op:"#" op:"->" op:"#_" op:"\\" id:"$" op:"/" id:"z"))');
     });
 
     it('Should parse blocks', function () {
@@ -210,7 +214,7 @@ describe('Meta.Compiler', function () {
         '  l2d'
       ]), '(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
     });
-    
+
     it('Should parse commas', function () {
       compareArrayToTokenDump(parseArray([
         'a (b c, d e, f g)'
@@ -259,7 +263,7 @@ describe('Meta.Compiler', function () {
           message: 'Closing root'
         }
       ]);
-      
+
       compareArrayToTokenDump(parseArray([
         'a (b] c)'
       ]),
@@ -271,7 +275,7 @@ describe('Meta.Compiler', function () {
           message: 'Mismatched close'
         }
       ]);
-      
+
       compareArrayToTokenDump(parseArray([
         'a b, c'
       ]),
@@ -283,7 +287,7 @@ describe('Meta.Compiler', function () {
           message: 'Misplaced ","'
         }
       ]);
-      
+
       compareArrayToTokenDump(parseArray([
         'a (',
         '  b',
@@ -326,7 +330,7 @@ describe('Meta.Compiler', function () {
         }
       ]);
     });
-    
+
     it('Should parse do blocks', function () {
       compareArrayToTokenDump(parseArray([
         'do',
@@ -364,7 +368,7 @@ describe('Meta.Compiler', function () {
       ]), '(b (l id:"a" (d id:"k" (b (l id:"b") (l (d (b (l id:"c") (l id:"d"))))))))');
     });
   });
-    
+
   describe('#combine()', function () {
     it('Should combine symbols', function () {
       compareArrayToExpressionString(combineArray([
