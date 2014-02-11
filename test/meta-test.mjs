@@ -301,6 +301,7 @@ meta
   macro 'now'
     precedence: LOW
     arity: unary
+    dependent: ['when', 'then']
     expand:
       var declarations = []
       var callbacksTagMap = new Object(null)
@@ -376,14 +377,12 @@ meta
   macro 'when'
     precedence: LOW
     arity: binaryKeyword
-    dependsFrom: 'now'
     expand: ()
 
 meta
   macro 'then'
     precedence: LOW
     arity: unary
-    dependsFrom: 'now'
     expand: ()
 
 
