@@ -72,6 +72,7 @@ it 'Should handle nested do and if'
         give (4, 8)
       give (5, 10)
     return (b - a)
+
   g(1, 2).should.equal(1)
   g(-1, 2).should.equal(3)
   g(-1, -2).should.equal(4)
@@ -83,6 +84,7 @@ it 'Should handle object literals'
     a: 1
     b: 2
   }
+
   obj.should.have.property('a', 1)
   obj.should.have.property('b', 2)
 
@@ -143,6 +145,7 @@ it 'Should handle a simple macro'
         var code = \<- ('moo ' + (arg))
         code.replaceTag('arg', expr.argAt(0))
         give code
+
   (moo 42).should.equal('moo 42')
   (moo 69).should.equal('moo 69')
   (moo ('Hello '+ 'meta!')).should.equal('moo Hello meta!')
