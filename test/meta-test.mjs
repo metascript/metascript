@@ -218,6 +218,11 @@ it 'Should handle the void operator'
   void (var a = 1)
   a.should.equal 1
 
+; Cannot test this here without try/catch: myExternal is not defined at all.
+;it 'Should handle external symbols'
+;  #external myExternal
+;  (typeof myExternal == 'undefined').should.equal true
+
 it 'Should handle giving void do invocations'
   var v = 0
   var f = ()->do
