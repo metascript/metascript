@@ -236,6 +236,29 @@ it 'Should handle try catch statements'
   c.should.equal true
   f.should.equal true
 
+it 'Should handle try catch expressions'
+  var
+    o = null
+    f = false
+    c = false
+    r =
+      try
+        o.a = o.b.c
+      catch var e
+        c = true
+        true
+      finally
+        f = true
+  c.should.equal true
+  r.should.equal true
+  f.should.equal true
+  r =
+    try
+      false
+    catch var e
+      true
+  r.should.equal false
+
 it 'Should handle giving void do invocations'
   var v = 0
   var f = ()->do
