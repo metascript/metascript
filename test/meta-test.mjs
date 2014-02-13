@@ -544,6 +544,7 @@ meta
 
 
 it 'Has a prototype of foreach'
+  var c
   var a = [1, 2, 3]
   var r = 0
   foreach (var idx) (indexesOf a)
