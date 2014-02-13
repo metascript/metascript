@@ -218,10 +218,23 @@ it 'Should handle the void operator'
   void (var a = 1)
   a.should.equal 1
 
-; Cannot test this here without try/catch: myExternal is not defined at all.
-;it 'Should handle external symbols'
-;  #external myExternal
-;  (typeof myExternal == 'undefined').should.equal true
+it 'Should handle external symbols'
+  #external myExternal
+  (typeof myExternal == 'undefined').should.equal true
+
+it 'Should handle try catch statements'
+  var
+    o = null
+    c = false
+    f = false
+  try
+    o.a = o.b.c
+  catch var e
+    c = true
+  finally
+    f = true
+  c.should.equal true
+  f.should.equal true
 
 it 'Should handle giving void do invocations'
   var v = 0
@@ -233,13 +246,13 @@ it 'Should handle giving void do invocations'
   v.should.equal 2
 
 it 'Should handle || short circuit'
-  var v = 1;
+  var v = 1
   var t = (true || do (v = 2, give false))
   v.should.equal 1
   t.should.equal true
 
 it 'Should handle && short circuit'
-  var v = 1;
+  var v = 1
   var t = (false && do (v = 2, give true))
   v.should.equal 1
   t.should.equal false
@@ -486,7 +499,7 @@ meta
       var assignable = declaration.getAssignable()
       var yielder = expr.argAt(1)
       var body = expr.argAt(2)
-      var yieldCount = 0;
+      var yieldCount = 0
       yielder.forEachRecursive
         (e) -> do
           if (e.id() == 'yield')
@@ -550,7 +563,7 @@ it 'Has a prototype of foreach'
   foreach (var idx) (indexesOf a)
     r += a[idx]
   r.should.equal(1 + 2 + 3)
-  r = 0;
+  r = 0
   foreach (var v) (3 .. 5)
     r += v
   r.should.equal(3 + 4 + 5)
