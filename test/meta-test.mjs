@@ -244,10 +244,9 @@ it 'Should handle try catch expressions'
     r =
       try
         o.a = o.b.c
-      catch var e
-        do
-          c = true
-          true
+      catch var e do
+        c = true
+        true
       finally
         f = true
   c.should.equal true
