@@ -153,7 +153,7 @@ it 'Should handle a simple macro'
 it 'Should handle a macro involving \"this\"'
   meta
     macro "@@@"
-      precedence: KEY
+      precedence: HIGH
       expand:
         var code = \<- this.arg
         code.replaceTag('arg', expr.argAt(0))
@@ -168,7 +168,7 @@ it 'Should handle a macro involving \"this\"'
 it 'Should have a proper \"@\" operator'
   meta
     macro '@'
-      precedence: KEY
+      precedence: HIGH
       expand:
         var member = expr.argAt(0)
         var code =
@@ -490,7 +490,7 @@ it 'Still supports simple expressions'
 it 'Can write macros better'
   meta
     macro "@@@"
-      precedence: KEY
+      precedence: HIGH
       expand:
         { arg: expr.argAt(0) } \<->
           this.arg
@@ -590,3 +590,30 @@ it 'Has a prototype of foreach'
   foreach (var v) (3 .. 5)
     r += v
   r.should.equal(3 + 4 + 5)
+
+meta
+  macro '<-'
+    precedence: LOW
+    arity: binary
+    expand:
+      var tuple = expr.newTuple()
+      var right = expr.argAt 1
+      loop (right) do
+        if (right == ())
+          end
+        else if (right.isCall())
+          tuple.push(right.argAt 0)
+          next(right.argAt 0)
+        else
+          tuple.push(right)
+          end
+      if (tuple.argCount == 1)
+        tuple.transformInto(tuple.argAt 0)
+      var result = expr.newCall()
+      result.push(expr.argAt 0)
+      result.push tuple
+      result
+
+it 'Can simplify function calls'
+  var f = (a, b, c) -> a + b + c
+  (f <- 'a' 'b' 'c').should.equal('abc')
