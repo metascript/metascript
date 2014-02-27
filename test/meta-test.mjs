@@ -307,11 +307,10 @@ meta
         expr.error('Object literal expected')
         return ()
       var code = expr.argAt(1)
-      var codeTag = \<- \codeTag
       var result = \<- do
-        var codeTag = \<- code
+        var \codeTag = \<- code
         tagReplacements
-        codeTag
+        \codeTag
       var tagReplacements = []
       var ok = true
       replacements.forEach
@@ -322,14 +321,12 @@ meta
           var tagName = replacement.argAt(0).getTag()
           var quotedTagName = \<- 'name'
           quotedTagName.val = tagName
-          var tagReplacement = \<- (codeTag.replaceTag(quotedTagName, replacement))
-          tagReplacement.replaceTag('codeTag', codeTag)
+          var tagReplacement = \<- (\codeTag.replaceTag(quotedTagName, replacement))
           tagReplacement.replaceTag('quotedTagName', quotedTagName)
           tagReplacement.replaceTag('replacement', replacement.argAt(1))
           tagReplacements.push tagReplacement
       if (!ok)
         give \<- null
-      result.replaceTag('codeTag', codeTag)
       result.replaceTag('code', code)
       result.replaceTag('tagReplacements', tagReplacements)
       result
@@ -363,7 +360,7 @@ meta
           if (callbacksTagMap[whenTagName])
             arg.error('Callback \"' + whenTagName + '\" already declared')
           var declaration = {
-            whenTag: whenTag
+            whenTag: whenTag.copy().handleAsTagDeclaration()
           } \<-> (var whenTag = null)
           declarations.push declaration
           callbacksTagMap[whenTagName] = whenTag
@@ -519,7 +516,7 @@ meta
     arity: ternaryKeyword
     expand: do
       var declaration = expr.argAt(0)
-      var assignable = declaration.getAssignable()
+      var assignable = declaration.getAssignable().copy().handleAsTagUse()
       var yielder = expr.argAt(1)
       var body = expr.argAt(2)
       var yieldCount = 0
