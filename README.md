@@ -1,7 +1,7 @@
 Metascript
 ==========
 
-This is an attempt at creating a new language that compiles to Javascript.
+This is yet another programming language that compiles to Javascript.
 The main goal is to have a language that can have a readable syntax, and at the same time allow lisp-style metaprogramming (macros that can manipulate the AST).
 Another goal is to have a type system, for optionally performing static type checking (with type inference).
 
@@ -18,6 +18,8 @@ To run the tests, do the following:
 - run "npm install" and "npm test".
 
 Otherwise, if you only want to try the compiler, just do "npm install meta-script" and have fun running the 'mjs' script. But I'd still suggest to have a look at the tests written in Metascript to see some code samples.
+
+There is [Gulp](http://gulpjs.com/) integration [here](http://github.com/bamboo/gulp-mjs), and a [Lighttable](http://www.lighttable.com/) plugin [here](http://github.com/bamboo/MightTable), thanks to [Bamboo](http://bamboo.github.io/).
 
 There is a Google group (metascript@googlegroups.com), it is still empty but discussion about Metascript is supposed to happen there.
 
@@ -112,7 +114,7 @@ Simple expressions are intuitive to read:
 ```
 
 In Metascript there is no real distinction between expression and statement: almost every construct is an expression.
-Particularly, 'if', 'loop' and 'do' (_do_ is the equivalent of code blocks) are expressions that produce values and can be freely nested inside other expressions:
+Particularly, 'if', 'loop', 'do' (_do_ is the equivalent of code blocks) and 'try' are expressions that produce values and can be freely nested inside other expressions:
 
 ```
 var mood = if happy ':-)' else ':-('
@@ -244,9 +246,8 @@ The Metascript compiler performs some basic data flow analysis on the code it pr
 Particularly, it checks the following:
 - that every assignment has an assignable expression on its left side,
 - that every expression produces the required value (or values),
-- that every variable has been declared in the current scope,
-- that every variable is not used undefined (this is still unimplemented), and
-- that every block is properly terminated (this is also unimplemented and could be made useless by another planned change).
+- that every variable has been declared in the current scope, and
+- that every variable is not used undefined (this is still unimplemented)
 
 Every expression is evaluated in a context where a certain number of result values is required. For instance, consider the following assignment:
 
@@ -273,7 +274,9 @@ The rules are simple:
 - Assignment operators count the number of expressions on their left, check that they are assignable, and require an equal number of values on the right.
 - _if_ and _do_ expressions must produce the number of results required from their context
     - _if_ expressions produce results by simply evaluating them
-    - since _do_ expressions already evaluate a sequence of expressions, a _give_ statement is required to specify the result of the _do_
+    - since _do_ expressions already evaluate a sequence of expressions, if they must produce a value they can be terminated in two ways:
+      - with a _give_ statement that specifies the result of the _do_, or
+      - their last expression is assumed to be the result of the _do_.
 - Function invocations are like a binary operator that requires one value on the left (the callee) and an argument on the right, which can be a tuple (the arguments).
 - Every other operator requires exactly one value for each operand.
 
@@ -335,11 +338,11 @@ Note that there are already examples of these macros in the tests.
 
 ### Variable declarations
 
-Metascript, like Cofeescript, tries to shield the programmer from subtle errors that can creep into Javascript programs when an undeclared variable is assigned (which causes the creation of a new member of the global object).
+Metascript, like Cofeescript, tries to shield the programmer from subtle errors that can creep into Javascript programs when an undeclared variable is assigned (which causes the creation of a new property in the global object).
 
 However in Metascript the rules are different: the programmer must explicitly declare every variable.
 Metascript puts every declaration at the beginning of the local "Javascript scope" in the generated code (which means either the beginning of the compilation unit, or the beginning of the current function), but it handles naming resolution like if the language had block scoping.
-Moreover, Metascript does not allow the declaration of a variable with a name already used in the current scope (in this case I mean _block_ scope and not _function_ scope). I made this choice because scoping (and captured variables) are really important in Javascript, and I think that redefined names cause ambiguities reading code and should be avoided. Moreover, with this rule, if one does never relies on the value of undefined variables (note, _undefined_, not just _undeclared_!), for all practical purposes Metascript provides variable declarations with local scoping which IMHO is a very desirable thing to have.
+Moreover, Metascript does not allow the declaration of a variable with a name already used in the current scope (in this case I mean _block_ scope and not _function_ scope). I made this choice because scoping (and captured variables) are really important in Javascript, and I think that redefined names cause ambiguities reading code and should be avoided. Moreover, with this rule, if one never relies on the value of undefined variables (note, _undefined_, not just _undeclared_!), for all practical purposes Metascript provides variable declarations with local scoping which IMHO is a very desirable thing to have.
 And since the data flow analysis performed by the Metascript compiler disallows uses of undefined variables local (this piece of analysis is still unimplemented) using an undefined variable is not possible anyway.
 
 ### Function Definitions
@@ -371,10 +374,6 @@ About data flow analysis, the body of a function definition is handled as follow
 - the compiler will produce a return statement and will assume that the body expression must produce exactly one value, which will be returned by the function.
 This way the programmer can always write very concise code but the compiler will anyway be able to perform data flow analysis with no ambiguities.
 
-### _TODO:_ try, catch, finally
-
-I have wired them in the parser but I still do not generate code for them.
-
 ### _TODO:_ switch, case
 
 Technically, a _switch_ could be implemented with a sequence of chained _if...else_ expressions, so it could be implemented as a macro.
@@ -389,8 +388,8 @@ Metascript supports array and object literals exactly like Javascript, and uses 
 The only difference comes from the fact that indentation rules can be used inside literals, too.
 
 The trick is the following:
-- If, after an open _[_ or _{_, something is written on the _same_ line, the parser stais in _()_ mode and expects commas as separators for the value elements (or properties).
-- If, on the other hand, a newline is found immediately after the opening of the literal, the following block will be taken as the onject content (using newlines as separators and following the indentation rules).
+- If, after an open _[_ or _{_, something is written on the _same_ line, the parser stays in _()_ mode and expects commas as separators for the value elements (or properties).
+- If, on the other hand, a newline is found immediately after the opening of the literal, the following block will be taken as the object content (using newlines as separators and following the indentation rules).
 
 This is best shown with an example, in which we have two identical definitions:
 
@@ -619,7 +618,7 @@ meta
           next ()
 ```
 
-Another useful Metascript feature is the ability of producing variables with unique names when expanding macros, without forcing the programmer to explicitly call "gensym"-like functions (for those that know Lisp and Scheme, this means that Metascript makes it easy to write [hygienic macros](http://en.wikipedia.org/wiki/Hygienic_macro).
+Another useful Metascript feature is the ability of producing variables with unique names when expanding macros, without forcing the programmer to explicitly call "gensym"-like functions (for those that know Lisp and Scheme, this means that Metascript makes it easy to write [hygienic macros](http://en.wikipedia.org/wiki/Hygienic_macro)).
 To make use of the feature the programmer needs to use the _\\_ operator before identifiers that must be made unique, like this:
 
 ```
@@ -639,7 +638,15 @@ TODO List
 ---------
 
 - Organize the todo list as issues that can be tracked on Github
-- [Light Table](http://www.lighttable.com/) integration!
+- Expand the [Light Table](http://www.lighttable.com/) [plugin](http://github.com/bamboo/MightTable):
+  - at the cursor location, make it possible to inspect:
+    - the AST produced by the parser
+    - the AST after macro expansion
+    - the generated javascript code
+    - the arity of the expression as inferred by the compiler
+  - it would be nice to have a mode where the editor automatically selects the current expression (AST subtree) at the cursor location, and changes it following the cursor movement
+  - integrate the plugin with the nodejs and browser REPL clients so that also Metascript will have a REPL
+  - maybe implement a ternjs-like code analysis to have member autocompletion
 - Write more useful macros
     - looping ones
     - generators
@@ -651,6 +658,5 @@ TODO List
 - Implement the trick about string interpolation
 - Settle on an API for a module system for macros (meta-modules!)
 - Document the AST API that can be used inside macros.
-- Wire the code to generate try-catch-finally
-- Implement the type system
+- Implement the type system, and expand the lighttable plugin to provide type-assisted autocompletion.
 - Finish this TODO list :-)
