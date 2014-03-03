@@ -520,6 +520,26 @@ describe('Meta.Compiler', function () {
       ]), '<do>(a, b)');
 
     });
+
+    it('Should normalize locations', function () {
+      var c = combineArray([
+        'var (a = 0, b = 1)',
+        'console.log(a + b)',
+        'console.log(a - b)'
+      ]);
+      var root = c.root;
+      root.normalizeLocation();
+      root.includesLocation(1, 5).should.equal(true);
+      root.includesLocation(3, 16).should.equal(true);
+      root.findLocation(1, 9).id().should.equal('<value>');
+      root.findLocation(1, 9).getValue().should.equal(0);
+      root.findLocation(1, 16).id().should.equal('<value>');
+      root.findLocation(2, 12).isTag().should.equal(true);
+      var plus = root.findLocation(2, 14);
+      plus.id().should.equal('+');
+      plus.includesLocation(2, 12).should.equal(true);
+      plus.includesLocation(2, 16).should.equal(true);
+    });
   });
 
   describe('#checkArity()', function () {
