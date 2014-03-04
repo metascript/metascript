@@ -544,13 +544,16 @@ describe('Meta.Compiler', function () {
       top.id().should.equal('<do>');
       top.parent.id().should.equal('<do>');
       top.loc.end.line.should.equal(1);
-      top.loc.end.column.should.equal(16);
+      top.loc.end.column.should.equal(17);
+      top.loc.start.column.should.equal(0);
       (top === root.findTopLevelAt(1, 20)).should.equal(true);
+      (top === root.findTopLevelAt(1, 1)).should.equal(true);
       top = root.findTopLevelAt(2, 5);
       top.id().should.equal('<call>');
       top.parent.id().should.equal('<do>');
       top.loc.end.line.should.equal(2);
-      top.loc.end.column.should.equal(16);
+      top.loc.end.column.should.equal(17);
+      top.loc.start.column.should.equal(0);
     });
   });
 
