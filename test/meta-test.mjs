@@ -297,6 +297,12 @@ it 'Can replace tags with arrays inside code'
   a addTwice 1
   a.should.equal 2
 
+
+meta
+  macro '\\->'
+    arity: unary
+    expand: ()
+
 meta
   macro '\\<->'
     precedence: LOW
@@ -313,6 +319,21 @@ meta
         \codeTag
       var tagReplacements = []
       var ok = true
+      var unquoteIndex = 1
+      code.forEachRecursive
+        (child) -> do
+          if (child.id() == '\\->')
+            var
+              replacement = child.argAt 0
+              replacementName = 'unquote' + unquoteIndex;
+              replacementNameVal = child.newValue replacementName
+              replacementNameTag = child.newTag replacementName
+              tagReplacement = \<- (\codeTag.replaceTag(quotedTagName, replacement))
+            child.replaceWith replacementNameTag
+            tagReplacement.replaceTag('quotedTagName', replacementNameVal)
+            tagReplacement.replaceTag('replacement', replacement)
+            tagReplacements.push tagReplacement
+            unquoteIndex += 1
       replacements.forEach
         (replacement) ->
           if (! (replacement.isProperty() && replacement.argAt(0).isTag()))
@@ -491,6 +512,20 @@ it 'Can write macros better'
       expand:
         { arg: expr.argAt(0) } \<->
           this.arg
+  var obj = {
+    a: 1
+    b: 2
+    m: () -> (@@@a + @@@b)
+  }
+  obj.m().should.equal 3
+
+it 'Can write macros even better'
+  meta
+    macro "@@@"
+      precedence: HIGH
+      expand:
+        {} \<->
+          this. \-> expr.argAt(0)
   var obj = {
     a: 1
     b: 2
