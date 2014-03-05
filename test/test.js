@@ -525,12 +525,14 @@ describe('Meta.Compiler', function () {
       var c = combineArray([
         'var (a = 0, b = 1)',
         'console.log(a + b)',
+        '',
+        '',
         'console.log(a - b)'
       ]);
       var root = c.root;
       root.normalizeLocation();
       root.includesLocation(1, 5).should.equal(true);
-      root.includesLocation(3, 16).should.equal(true);
+      root.includesLocation(5, 16).should.equal(true);
       root.findLocationAt(1, 9).id().should.equal('<value>');
       root.findLocationAt(1, 9).getValue().should.equal(0);
       root.findLocationAt(1, 16).id().should.equal('<value>');
