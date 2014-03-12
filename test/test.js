@@ -164,6 +164,14 @@ describe('Meta.Compiler', function () {
         '  l2c',
         '  l2d'
       ]), '(b (l id:"l1a" (b (l id:"l2a") (l id:"l2b"))) (l id:"l1b" (b (l id:"l2c") (l id:"l2d"))))');
+
+      compareArrayToTokenDump(parseArray([
+        'do',
+        '  var w = null',
+        '  loop (var i = 0)',
+        '    if (i < 10) next i + 1',
+        'console.log \'Ho!\''
+      ]), '(b (l (d (b (l id:"var" id:"w" op:"=" id:"null") (l id:"loop" ((c id:"var" id:"i" op:"=" val:0)) (b (l id:"if" ((c id:"i" op:"<" val:10)) id:"next" id:"i" op:"+" val:1)))))) (l id:"console" op:"." id:"log" val:"Ho!"))');
     });
 
     it('Should ignore comments and literate strings', function () {
