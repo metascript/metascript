@@ -649,3 +649,10 @@ meta
 it 'Can simplify function calls'
   var f = (a, b, c) -> a + b + c
   (f <- 'a' 'b' 'c').should.equal('abc')
+
+it 'Applies element and call precedences correctly'
+  var o = {
+    p: {a: [s -> s], f: () -> ( this.a ), m: ()->( this.p.a[0]('Hi!').length )}
+  }
+  o.p.f()[0]('Hi!').should.equal 'Hi!'
+  o['p']['a'][0]('Hola!').should.equal 'Hola!'
