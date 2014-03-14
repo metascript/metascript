@@ -354,6 +354,18 @@ meta
 
 
 meta
+  macro 'when'
+    precedence: LOW
+    arity: binaryKeyword
+    expand: ()
+
+meta
+  macro 'then'
+    precedence: LOW
+    arity: unary
+    expand: ()
+
+meta
   macro 'async'
     precedence: KEY
     arity: optional
@@ -434,18 +446,6 @@ meta
         declarations
         body
       result
-
-meta
-  macro 'when'
-    precedence: LOW
-    arity: binaryKeyword
-    expand: ()
-
-meta
-  macro 'then'
-    precedence: LOW
-    arity: unary
-    expand: ()
 
 
 it 'Gives a way out of callback hell'
