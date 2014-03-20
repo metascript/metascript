@@ -261,7 +261,7 @@ it 'Should handle try catch expressions'
 
 it 'Should handle giving void do invocations'
   var v = 0
-  var f = ()->do
+  var f = () -> do
     v = 1
     give do
       v = 2

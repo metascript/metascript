@@ -99,7 +99,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToTokenDump(parseArray([
         'print """END\n1\n2\n3\nEND\nok'
-      ]), '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
+      ]), '(b (l id:"print" val:"123") (l id:"ok"))');
 
       compareArrayToTokenDump(parseArray([
         'print """\n1\n2\n3\n"""\nok'
@@ -400,7 +400,7 @@ describe('Meta.Compiler', function () {
       ]), '/(*(x, -x(y)), +x(z))');
 
       compareArrayToExpressionString(combineArray([
-        '-x * - y / + z'
+        '- x * - y / +z'
       ]), '/(*(-x(x), -x(y)), +x(z))');
 
       compareArrayToExpressionString(combineArray([
@@ -448,15 +448,15 @@ describe('Meta.Compiler', function () {
       ]), '++x(a)');
 
       compareArrayToExpressionString(combineArray([
-        'a--'
+        'a --'
       ]), 'x--(a)');
 
       compareArrayToExpressionString(combineArray([
-        '++a--'
+        '++a --'
       ]), 'x--(++x(a))');
 
       compareArrayToExpressionString(combineArray([
-        'f(a--)'
+        'f(a --)'
       ]), '<call>(f, x--(a))');
 
       compareArrayToExpressionString(combineArray([
@@ -512,7 +512,7 @@ describe('Meta.Compiler', function () {
       ]), '->(a, <call>(a, a))');
 
       compareArrayToExpressionString(combineArray([
-        'a->a+b'
+        'a -> a+b'
       ]), '->(a, +(a, b))');
 
       compareArrayToExpressionString(combineArray([
@@ -613,6 +613,14 @@ describe('Meta.Compiler', function () {
       compareArrayToExpressionString(resolveArray([
         '(a, b) -> (a.c + b.c)'
       ]), '->(<tuple>(a, b), +(.(a, c), .(b, c)))');
+
+      compareArrayToExpressionString(resolveArray([
+        '(a, a-b, a!, b?, a!!?, --a-, a-b-c!) -> (a)'
+      ]), '->(<tuple>(a, aB, doA, isB, doDoIsA, _A_, doABC), a)');
+
+      compareArrayToExpressionString(resolveArray([
+        '(a, ->a, a->b, abc->def->geh-zzz!) -> (a)'
+      ]), '->(<tuple>(a, toA, aToB, doAbcToDefToGehZzz), a)');
     });
 
     it('Should detect unresolved symbols', function () {
