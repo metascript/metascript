@@ -29,6 +29,9 @@ describe 'Metascript' (
 it 'Should evaluate simple expression'
   (if true 1 else 2).should.equal 1
 
+it 'Should evaluate modulus'
+  (5 % 2).should.equal 1
+
 it 'Should handle tuple assignments'
   var (a, b) = if true (1, 2) else (2, 1)
   a.should.equal(1)

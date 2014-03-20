@@ -126,6 +126,10 @@ describe('Meta.Compiler', function () {
       compareArrayToTokenDump(parseArray([
         'a #1 b #abc# #-> #_\\$/z'
       ]), '(b (l id:"a" op:"#1" id:"b" op:"#abc#" op:"#" op:"->" op:"#_" op:"\\" id:"$" op:"/" id:"z"))');
+
+      compareArrayToTokenDump(parseArray([
+        '#1 ` ~ %'
+      ]), '(b (l op:"#1" op:"`" op:"~" op:"%"))');
     });
 
     it('Should parse blocks', function () {
