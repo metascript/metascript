@@ -1,6 +1,6 @@
 {
   "name": "meta-script",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "author": "Massimiliano Mantione <massimiliano.mantione@gmail.com>",
   "description": "A language with a compiler that targets Javascript.",
   "repository": {
