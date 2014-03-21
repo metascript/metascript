@@ -597,6 +597,31 @@ describe('Meta.Compiler', function () {
           message: 'should produce a simple value'
         }
       ]);
+
+      compareArrayToExpressionString(combineArray([
+        '(a, b) ->', '  a(* a, b *)'
+      ]), '->(<tuple>(a, b), <call>(a, <tuple>(*(<placeholder>, a), *(b, <placeholder>))))', [
+        {
+          line: 2,
+          column: 4,
+          message: 'Missing expression'
+        },
+        {
+          line: 2,
+          column: 4,
+          message: 'Void expression used'
+        },
+        {
+          line: 2,
+          column: 11,
+          message: 'Missing expression'
+        },
+        {
+          line: 2,
+          column: 11,
+          message: 'Void expression used'
+        }
+      ]);
     });
   });
 
