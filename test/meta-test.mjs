@@ -5,7 +5,7 @@ meta
     precedence: KEY
     arity: binaryKeyword
     expand:
-      var code = \<- describe
+      var code = #quote describe
         item
         () -> body
       code.replaceTag('item', expr.argAt(0))
@@ -17,7 +17,7 @@ meta
     precedence: KEY
     arity: binaryKeyword
     expand:
-      var code = \<- it
+      var code = #quote it
         item
         () -> body
       code.replaceTag('item', expr.argAt(0))
@@ -145,7 +145,7 @@ it 'Should handle a simple macro'
     macro "moo"
       precedence: KEY
       expand: do
-        var code = \<- ('moo ' + (arg))
+        var code = #quote ('moo ' + (arg))
         code.replaceTag('arg', expr.argAt(0))
         give code
 
@@ -158,7 +158,7 @@ it 'Should handle a macro involving \"this\"'
     macro "@@@"
       precedence: HIGH
       expand:
-        var code = \<- this.arg
+        var code = #quote this.arg
         code.replaceTag('arg', expr.argAt(0))
         code
   var obj = {
@@ -176,9 +176,9 @@ it 'Should have a proper \"@\" operator'
         var member = expr.argAt(0)
         var code =
           if (member.isTag())
-            \<- this.member
+            #quote this.member
           else
-            \<- this[member]
+            #quote this[member]
         code.replaceTag('member', member)
         code
   var obj = {
@@ -197,7 +197,7 @@ it 'Should have macros that rename variables'
       precedence: KEY
       expand:
         var count = expr.argAt(0)
-        var code = \<- do
+        var code = #quote do
           var \result = []
           loop (var \i = 0)
             if (\i < count)
@@ -290,10 +290,10 @@ it 'Can replace tags with arrays inside code'
       expand:
         var left = expr.argAt(0)
         var right = expr.argAt(1)
-        var code = \<- (left += right)
+        var code = #quote (left += right)
         code.replaceTag('left', left)
         code.replaceTag('right', right)
-        var result = \<- (do code)
+        var result = #quote (do code)
         result.replaceTag('code', [code, code])
         result
   var a = 0
@@ -302,22 +302,22 @@ it 'Can replace tags with arrays inside code'
 
 
 meta
-  macro '\\->'
+  macro '~`'
     arity: unary
     expand: ()
 
 meta
-  macro '\\<->'
+  macro '`'
     precedence: LOW
     arity: binary
     expand:
       var replacements = expr.argAt(0)
-      if (!replacements.isObject())
+      if (!(replacements.isObject() || replacements.isPlaceholder()))
         expr.error('Object literal expected')
         return ()
       var code = expr.argAt(1)
-      var result = \<- do
-        var \codeTag = \<- code
+      var result = #quote do
+        var \codeTag = #quote code
         tagReplacements
         \codeTag
       var tagReplacements = []
@@ -325,13 +325,13 @@ meta
       var unquoteIndex = 1
       code.forEachRecursive
         (child) -> do
-          if (child.id() == '\\->')
+          if (child.id() == '~`')
             var
               replacement = child.argAt 0
               replacementName = 'unquote' + unquoteIndex;
               replacementNameVal = child.newValue replacementName
               replacementNameTag = child.newTag replacementName
-              tagReplacement = \<- (\codeTag.replaceTag(quotedTagName, replacement))
+              tagReplacement = #quote (\codeTag.replaceTag(quotedTagName, replacement))
             child.replaceWith replacementNameTag
             tagReplacement.replaceTag('quotedTagName', replacementNameVal)
             tagReplacement.replaceTag('replacement', replacement)
@@ -343,14 +343,14 @@ meta
             replacement.error('Tag definition expected')
             ok = false
           var tagName = replacement.argAt(0).getTag()
-          var quotedTagName = \<- 'name'
+          var quotedTagName = #quote 'name'
           quotedTagName.val = tagName
-          var tagReplacement = \<- (\codeTag.replaceTag(quotedTagName, replacement))
+          var tagReplacement = #quote (\codeTag.replaceTag(quotedTagName, replacement))
           tagReplacement.replaceTag('quotedTagName', quotedTagName)
           tagReplacement.replaceTag('replacement', replacement.argAt(1))
           tagReplacements.push tagReplacement
       if (!ok)
-        give \<- null
+        give #quote null
       result.replaceTag('code', code)
       result.replaceTag('tagReplacements', tagReplacements)
       result
@@ -397,7 +397,7 @@ meta
             arg.error('Callback \"' + whenTagName + '\" already declared')
           var declaration = {
             whenTag: whenTag.copy().handleAsTagDeclaration()
-          } \<-> (var whenTag = null)
+          } ` (var whenTag = null)
           declarations.push declaration
           callbacksTagMap[whenTagName] = whenTag
           callbacksCodeMap[whenTagName] = whenTagCode
@@ -407,9 +407,9 @@ meta
           if (thenCallbackTag != null)
             arg.error('Callback \"then\" already declared')
           else do
-            thenCallbackTag = \<- \thenCallback
+            thenCallbackTag = #quote \thenCallback
             thenCallbackCode = arg.argAt(0)
-            var thenDclaration = \<- (var \thenCallback = null)
+            var thenDclaration = #quote (var \thenCallback = null)
             declarations.push thenDclaration
           expr.remove(arg)
           next (i)
@@ -422,10 +422,10 @@ meta
               if (thenCallbackTag != null)
                 {
                   thenCallbackCode : thenCallbackCode
-                } \<-> (\thenCallback = thenCallbackCode)
+                } ` (\thenCallback = thenCallbackCode)
               else do
                 e.error('Callback \"then\" not declared')
-                give \<- null
+                give #quote null
             tExp.forEachRecursive processAsync
             e.replaceWith tExp
           else
@@ -435,17 +435,17 @@ meta
                 {
                   whenCallbackTag : callbacksTagMap[wName]
                   whenCallbackCode : callbacksCodeMap[wName]
-                } \<-> (whenCallbackTag = whenCallbackCode)
+                } ` (whenCallbackTag = whenCallbackCode)
               else do
                 e.error('Callback \"' + wName + '\" not declared')
-                give \<- null
+                give #quote null
             wExp.forEachRecursive processAsync
             e.replaceWith wExp
       body.forEachRecursive processAsync
       var result = {
         declarations: declarations
         body: body
-      } \<-> do
+      } ` do
         declarations
         do
           body
@@ -485,7 +485,7 @@ meta
     precedence: LOW
     arity: binaryKeyword
     expand: do
-      var code = \<- loop ()
+      var code = #quote loop ()
         if (!(condition))
           end
         else
@@ -514,8 +514,7 @@ it 'Can write macros better'
     macro "@@@"
       precedence: HIGH
       expand:
-        { arg: expr.argAt(0) } \<->
-          this.arg
+        { arg: expr.argAt(0) } ` this.arg
   var obj = {
     a: 1
     b: 2
@@ -528,8 +527,7 @@ it 'Can write macros even better'
     macro "@@@"
       precedence: HIGH
       expand:
-        {} \<->
-          this. \-> expr.argAt(0)
+        `this. ~`expr.argAt(0)
   var obj = {
     a: 1
     b: 2
@@ -574,14 +572,14 @@ meta
               assignable : assignable
               value : value
               body : body
-            } \<-> do
+            } ` do
               assignable = value
               body
             e.replaceWith assignment
       give {
         declaration: declaration
         yielder: yielder
-      } \<-> do
+      } ` do
         declaration
         yielder
 
@@ -592,7 +590,7 @@ meta
     expand: do
       give {
         a: expr.argAt(0)
-      } \<-> loop (var \i = 0)
+      } ` loop (var \i = 0)
         if (\i < a.length)
           yield \i
           next (\i + 1)
@@ -607,7 +605,7 @@ meta
       give {
         start: expr.argAt(0)
         limit: expr.argAt(1)
-      } \<-> loop (var \i = start)
+      } ` loop (var \i = start)
         if (\i <= limit)
           yield \i
           next (\i + 1)
