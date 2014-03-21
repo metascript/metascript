@@ -521,7 +521,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         '(a, b) -> do', '  a', '  b'
-      ]), '->(<tuple>(a, b), <do>(a, b))');
+      ]), '->(<tuple>(a, b), <do>(a, give(b)))');
 
       compareArrayToExpressionString(combineArray([
         '(a, b) -> return do', '  a', '  give b'

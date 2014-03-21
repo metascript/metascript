@@ -447,7 +447,8 @@ meta
         body: body
       } \<-> do
         declarations
-        body
+        do
+          body
       result
 
 
