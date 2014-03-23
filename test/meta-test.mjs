@@ -535,6 +535,31 @@ it 'Can write macros even better'
   }
   obj.m().should.equal 3
 
+it 'Supports readable identifiers'
+  meta
+    macro '@'
+      precedence: HIGH
+      expand:
+        var member = expr.argAt(0)
+        if (member.isTag())
+          `this. ~`member
+        else
+          ` this[~`member]
+  var obj = {
+    a: false
+    b: false
+    ok? : () -> (@a && @b)
+    ;ok! : () -> (this.a, this.b) = (true, true)
+    ok! : () ->
+      this.a = true
+      this.b = true
+  }
+  obj.ok?().should.equal false
+  obj.isOk().should.equal false
+  obj.ok!()
+  obj.ok?().should.equal true
+  obj.isOk().should.equal true
+
 it 'Handles binary keywords properly'
   var result =
     if 1 + 1 == 2 true
