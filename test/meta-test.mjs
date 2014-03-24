@@ -8,8 +8,8 @@ meta
       var code = #quote describe
         item
         () -> body
-      code.replaceTag('item', expr.argAt(0))
-      code.replaceTag('body', expr.argAt(1))
+      code.replaceTag('item', expr.at 0)
+      code.replaceTag('body', expr.at 1)
       code
 
 meta
@@ -20,8 +20,8 @@ meta
       var code = #quote it
         item
         () -> body
-      code.replaceTag('item', expr.argAt(0))
-      code.replaceTag('body', expr.argAt(1))
+      code.replaceTag('item', expr.at 0)
+      code.replaceTag('body', expr.at 1)
       code
 
 describe 'Metascript' (
@@ -146,7 +146,7 @@ it 'Should handle a simple macro'
       precedence: KEY
       expand: do
         var code = #quote ('moo ' + (arg))
-        code.replaceTag('arg', expr.argAt(0))
+        code.replaceTag('arg', expr.at 0)
         give code
 
   (moo 42).should.equal('moo 42')
@@ -159,7 +159,7 @@ it 'Should handle a macro involving \"this\"'
       precedence: HIGH
       expand:
         var code = #quote this.arg
-        code.replaceTag('arg', expr.argAt(0))
+        code.replaceTag('arg', expr.at 0)
         code
   var obj = {
     a: 1
@@ -173,7 +173,7 @@ it 'Should have a proper \"@\" operator'
     macro '@'
       precedence: HIGH
       expand:
-        var member = expr.argAt(0)
+        var member = expr.at 0
         var code =
           if (member.isTag())
             #quote this.member
@@ -196,7 +196,7 @@ it 'Should have macros that rename variables'
     macro 'vTagTest'
       precedence: KEY
       expand:
-        var count = expr.argAt(0)
+        var count = expr.at 0
         var code = #quote do
           var \result = []
           loop (var \i = 0)
@@ -288,8 +288,8 @@ it 'Can replace tags with arrays inside code'
     macro 'addTwice'
       arity: binary
       expand:
-        var left = expr.argAt(0)
-        var right = expr.argAt(1)
+        var left = expr.at 0
+        var right = expr.at 1
         var code = #quote (left += right)
         code.replaceTag('left', left)
         code.replaceTag('right', right)
@@ -311,11 +311,11 @@ meta
     precedence: LOW
     arity: binary
     expand:
-      var replacements = expr.argAt(0)
+      var replacements = expr.at 0
       if (!(replacements.isObject() || replacements.isPlaceholder()))
         expr.error('Object literal expected')
         return ()
-      var code = expr.argAt(1)
+      var code = expr.at 1
       var result = #quote do
         var \codeTag = #quote code
         tagReplacements
@@ -325,9 +325,9 @@ meta
       var unquoteIndex = 1
       code.forEachRecursive
         (child) -> do
-          if (child.id() == '~`')
+          if (child.id == '~`')
             var
-              replacement = child.argAt 0
+              replacement = child.at 0
               replacementName = 'unquote' + unquoteIndex;
               replacementNameVal = child.newValue replacementName
               replacementNameTag = child.newTag replacementName
@@ -339,15 +339,15 @@ meta
             unquoteIndex += 1
       replacements.forEach
         (replacement) ->
-          if (! (replacement.isProperty() && replacement.argAt(0).isTag()))
+          if (! (replacement.isProperty() && replacement.at(0).isTag()))
             replacement.error('Tag definition expected')
             ok = false
-          var tagName = replacement.argAt(0).getTag()
+          var tagName = replacement.at(0).getTag()
           var quotedTagName = #quote 'name'
           quotedTagName.val = tagName
           var tagReplacement = #quote (\codeTag.replaceTag(quotedTagName, replacement))
           tagReplacement.replaceTag('quotedTagName', quotedTagName)
-          tagReplacement.replaceTag('replacement', replacement.argAt(1))
+          tagReplacement.replaceTag('replacement', replacement.at(1))
           tagReplacements.push tagReplacement
       if (!ok)
         give #quote null
@@ -385,14 +385,14 @@ meta
       var callbacksCodeMap = new Object(null)
       var thenCallbackTag = null
       var thenCallbackCode = null
-      var body = expr.argAt(0)
+      var body = expr.at 0
       loop (var i = 0)
-        if (i >= expr.argCount()) end
-        var arg = expr.argAt(i)
-        if (arg.id() == 'when')
-          var whenTag = arg.argAt(0)
-          var whenTagName = arg.argAt(0).getTag()
-          var whenTagCode = arg.argAt(1)
+        if (i >= expr.count) end
+        var arg = expr.at i
+        if (arg.id == 'when')
+          var whenTag = arg.at(0)
+          var whenTagName = arg.at(0).getTag()
+          var whenTagCode = arg.at(1)
           if (callbacksTagMap[whenTagName])
             arg.error('Callback \"' + whenTagName + '\" already declared')
           var declaration = {
@@ -403,12 +403,12 @@ meta
           callbacksCodeMap[whenTagName] = whenTagCode
           expr.remove(arg)
           next (i)
-        else if (arg.id() == 'then')
+        else if (arg.id == 'then')
           if (thenCallbackTag != null)
             arg.error('Callback \"then\" already declared')
           else do
             thenCallbackTag = #quote \thenCallback
-            thenCallbackCode = arg.argAt(0)
+            thenCallbackCode = arg.at(0)
             var thenDclaration = #quote (var \thenCallback = null)
             declarations.push thenDclaration
           expr.remove(arg)
@@ -416,8 +416,8 @@ meta
         else
           next (i + 1)
       var processAsync = (e) -> do
-        if (e.id() == 'async')
-          if (e.argCount() == 0)
+        if (e.id == 'async')
+          if (e.count == 0)
             var tExp =
               if (thenCallbackTag != null)
                 {
@@ -429,7 +429,7 @@ meta
             tExp.forEachRecursive processAsync
             e.replaceWith tExp
           else
-            var wName = e.argAt(0).getTag()
+            var wName = e.at(0).getTag()
             var wExp =
               if (callbacksTagMap[wName])
                 {
@@ -491,8 +491,8 @@ meta
         else
           body
           next ()
-      code.replaceTag('condition', expr.argAt(0))
-      code.replaceTag('body', expr.argAt(1))
+      code.replaceTag('condition', expr.at 0)
+      code.replaceTag('body', expr.at 1)
       code
 
 it 'Even has a while statement!'
@@ -514,7 +514,7 @@ it 'Can write macros better'
     macro "@@@"
       precedence: HIGH
       expand:
-        { arg: expr.argAt(0) } ` this.arg
+        { arg: expr.at 0 } ` this.arg
   var obj = {
     a: 1
     b: 2
@@ -527,7 +527,7 @@ it 'Can write macros even better'
     macro "@@@"
       precedence: HIGH
       expand:
-        `this. ~`expr.argAt(0)
+        `this. ~`expr.at 0
   var obj = {
     a: 1
     b: 2
@@ -540,7 +540,7 @@ it 'Supports readable identifiers'
     macro '@'
       precedence: HIGH
       expand:
-        var member = expr.argAt(0)
+        var member = expr.at 0
         if (member.isTag())
           `this. ~`member
         else
@@ -574,22 +574,22 @@ meta
     precedence: LOW
     arity: ternaryKeyword
     expand: do
-      var declaration = expr.argAt(0)
+      var declaration = expr.at 0
       var assignable = declaration.getAssignable().copy().handleAsTagUse()
-      var yielder = expr.argAt(1)
-      var body = expr.argAt(2)
+      var yielder = expr.at 1
+      var body = expr.at 2
       var yieldCount = 0
       yielder.forEachRecursive
         (e) -> do
-          if (e.id() == 'yield')
+          if (e.id == 'yield')
             yieldCount += 1
       if (yieldCount != 1) do
         yielder.error('Found ' + yieldCount + ' yield occurrences instead of 1')
         return ()
       yielder.forEachRecursive
         (e) -> do
-          if (e.id() == 'yield')
-            var value = e.argAt(0)
+          if (e.id == 'yield')
+            var value = e.at(0)
             var assignment = {
               assignable : assignable
               value : value
@@ -611,7 +611,7 @@ meta
     arity: unary
     expand: do
       give {
-        a: expr.argAt(0)
+        a: expr.at 0
       } ` loop (var \i = 0)
         if (\i < a.length)
           yield \i
@@ -625,8 +625,8 @@ meta
     arity: binary
     expand: do
       give {
-        start: expr.argAt(0)
-        limit: expr.argAt(1)
+        start: expr.at 0
+        limit: expr.at 1
       } ` loop (var \i = start)
         if (\i <= limit)
           yield \i
@@ -653,20 +653,20 @@ meta
     arity: binary
     expand:
       var tuple = expr.newTuple()
-      var right = expr.argAt 1
+      var right = expr.at 1
       loop (right) do
         if (right == ())
           end
         else if (right.isCall())
-          tuple.push(right.argAt 0)
-          next(right.argAt 0)
+          tuple.push(right.at 0)
+          next(right.at 0)
         else
           tuple.push(right)
           end
       if (tuple.argCount == 1)
-        tuple.transformInto(tuple.argAt 0)
+        tuple.transformInto(tuple.at 0)
       var result = expr.newCall()
-      result.push(expr.argAt 0)
+      result.push(expr.at 0)
       result.push tuple
       result
 
