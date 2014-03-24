@@ -549,10 +549,7 @@ it 'Supports readable identifiers'
     a: false
     b: false
     ok? : () -> (@a && @b)
-    ;ok! : () -> (this.a, this.b) = (true, true)
-    ok! : () ->
-      this.a = true
-      this.b = true
+    ok! : () -> do ((this.a, this.b) = (true, true), ())
   }
   obj.ok?().should.equal false
   obj.isOk().should.equal false
