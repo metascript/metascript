@@ -309,19 +309,14 @@ meta
 meta
   macro '`'
     precedence: LOW
-    arity: binary
+    arity: unary
     expand:
-      var replacements = ast.at 0
-      if (!(replacements.isObject() || replacements.isPlaceholder()))
-        ast.error('Object literal expected')
-        return ()
-      var code = ast.at 1
+      var code = ast.at 0
       var result = #quote do
         var \codeTag = #quote code
         tagReplacements
         \codeTag
       var tagReplacements = []
-      var ok = true
       var unquoteIndex = 1
       code.forEachRecursive
         (child) -> do
@@ -337,20 +332,6 @@ meta
             tagReplacement.replaceTag('replacement', replacement)
             tagReplacements.push tagReplacement
             unquoteIndex += 1
-      replacements.forEach
-        (replacement) ->
-          if (! (replacement.isProperty() && replacement.at(0).isTag()))
-            replacement.error('Tag definition expected')
-            ok = false
-          var tagName = replacement.at(0).getTag()
-          var quotedTagName = #quote 'name'
-          quotedTagName.val = tagName
-          var tagReplacement = #quote (\codeTag.replaceTag(quotedTagName, replacement))
-          tagReplacement.replaceTag('quotedTagName', quotedTagName)
-          tagReplacement.replaceTag('replacement', replacement.at(1))
-          tagReplacements.push tagReplacement
-      if (!ok)
-        give #quote null
       result.replaceTag('code', code)
       result.replaceTag('tagReplacements', tagReplacements)
       result
@@ -395,9 +376,7 @@ meta
           var whenTagCode = arg.at(1)
           if (callbacksTagMap[whenTagName])
             arg.error('Callback \"' + whenTagName + '\" already declared')
-          var declaration = {
-            whenTag: whenTag.copy().handleAsTagDeclaration()
-          } ` (var whenTag = null)
+          var declaration = `(var (~` (whenTag.copy().handleAsTagDeclaration())) = null)
           declarations.push declaration
           callbacksTagMap[whenTagName] = whenTag
           callbacksCodeMap[whenTagName] = whenTagCode
@@ -420,9 +399,7 @@ meta
           if (e.count == 0)
             var tExp =
               if (thenCallbackTag != null)
-                {
-                  thenCallbackCode : thenCallbackCode
-                } ` (\thenCallback = thenCallbackCode)
+                `(\thenCallback = ~`thenCallbackCode)
               else do
                 e.error('Callback \"then\" not declared')
                 give #quote null
@@ -432,24 +409,17 @@ meta
             var wName = e.at(0).getTag()
             var wExp =
               if (callbacksTagMap[wName])
-                {
-                  whenCallbackTag : callbacksTagMap[wName]
-                  whenCallbackCode : callbacksCodeMap[wName]
-                } ` (whenCallbackTag = whenCallbackCode)
+                `((~`callbacksTagMap[wName]) = (~`callbacksCodeMap[wName]))
               else do
                 e.error('Callback \"' + wName + '\" not declared')
                 give #quote null
             wExp.forEachRecursive processAsync
             e.replaceWith wExp
       body.forEachRecursive processAsync
-      var result = {
-        declarations: declarations
-        body: body
-      } ` do
-        declarations
+      `do
+        ~`declarations
         do
-          body
-      result
+          ~`body
 
 
 it 'Gives a way out of callback hell'
@@ -510,19 +480,6 @@ it 'Still supports simple expressions'
   (do (var a = 'a', a = a + a, a)).should.equal "aa"
 
 it 'Can write macros better'
-  meta
-    macro "@@@"
-      precedence: HIGH
-      expand:
-        { arg: ast.at 0 } ` this.arg
-  var obj = {
-    a: 1
-    b: 2
-    m: () -> (@@@a + @@@b)
-  }
-  obj.m().should.equal 3
-
-it 'Can write macros even better'
   meta
     macro "@@@"
       precedence: HIGH
@@ -590,30 +547,21 @@ meta
         (e) -> do
           if (e.id == 'yield')
             var value = e.at(0)
-            var assignment = {
-              assignable : assignable
-              value : value
-              body : body
-            } ` do
-              assignable = value
-              body
+            var assignment = `do
+              (~`assignable) = (~`value)
+              ~`body
             e.replaceWith assignment
-      give {
-        declaration: declaration
-        yielder: yielder
-      } ` do
-        declaration
-        yielder
+      `do
+        ~`declaration
+        ~`yielder
 
 meta
   macro 'indexesOf'
     precedence: LOW
     arity: unary
-    expand: do
-      give {
-        a: ast.at 0
-      } ` loop (var \i = 0)
-        if (\i < a.length)
+    expand:
+      `loop (var \i = 0)
+        if (\i < (~`ast.at 0).length)
           yield \i
           next (\i + 1)
         else
@@ -623,12 +571,9 @@ meta
   macro '..'
     precedence: LOW
     arity: binary
-    expand: do
-      give {
-        start: ast.at 0
-        limit: ast.at 1
-      } ` loop (var \i = start)
-        if (\i <= limit)
+    expand:
+      `loop (var \i = (~`ast.at 0))
+        if (\i <= (~`ast.at 1))
           yield \i
           next (\i + 1)
         else
