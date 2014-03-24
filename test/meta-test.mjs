@@ -8,8 +8,8 @@ meta
       var code = #quote describe
         item
         () -> body
-      code.replaceTag('item', expr.at 0)
-      code.replaceTag('body', expr.at 1)
+      code.replaceTag('item', ast.at 0)
+      code.replaceTag('body', ast.at 1)
       code
 
 meta
@@ -20,8 +20,8 @@ meta
       var code = #quote it
         item
         () -> body
-      code.replaceTag('item', expr.at 0)
-      code.replaceTag('body', expr.at 1)
+      code.replaceTag('item', ast.at 0)
+      code.replaceTag('body', ast.at 1)
       code
 
 describe 'Metascript' (
@@ -146,7 +146,7 @@ it 'Should handle a simple macro'
       precedence: KEY
       expand: do
         var code = #quote ('moo ' + (arg))
-        code.replaceTag('arg', expr.at 0)
+        code.replaceTag('arg', ast.at 0)
         give code
 
   (moo 42).should.equal('moo 42')
@@ -159,7 +159,7 @@ it 'Should handle a macro involving \"this\"'
       precedence: HIGH
       expand:
         var code = #quote this.arg
-        code.replaceTag('arg', expr.at 0)
+        code.replaceTag('arg', ast.at 0)
         code
   var obj = {
     a: 1
@@ -173,7 +173,7 @@ it 'Should have a proper \"@\" operator'
     macro '@'
       precedence: HIGH
       expand:
-        var member = expr.at 0
+        var member = ast.at 0
         var code =
           if (member.isTag())
             #quote this.member
@@ -196,7 +196,7 @@ it 'Should have macros that rename variables'
     macro 'vTagTest'
       precedence: KEY
       expand:
-        var count = expr.at 0
+        var count = ast.at 0
         var code = #quote do
           var \result = []
           loop (var \i = 0)
@@ -288,8 +288,8 @@ it 'Can replace tags with arrays inside code'
     macro 'addTwice'
       arity: binary
       expand:
-        var left = expr.at 0
-        var right = expr.at 1
+        var left = ast.at 0
+        var right = ast.at 1
         var code = #quote (left += right)
         code.replaceTag('left', left)
         code.replaceTag('right', right)
@@ -311,11 +311,11 @@ meta
     precedence: LOW
     arity: binary
     expand:
-      var replacements = expr.at 0
+      var replacements = ast.at 0
       if (!(replacements.isObject() || replacements.isPlaceholder()))
-        expr.error('Object literal expected')
+        ast.error('Object literal expected')
         return ()
-      var code = expr.at 1
+      var code = ast.at 1
       var result = #quote do
         var \codeTag = #quote code
         tagReplacements
@@ -385,10 +385,10 @@ meta
       var callbacksCodeMap = new Object(null)
       var thenCallbackTag = null
       var thenCallbackCode = null
-      var body = expr.at 0
+      var body = ast.at 0
       loop (var i = 0)
-        if (i >= expr.count) end
-        var arg = expr.at i
+        if (i >= ast.count) end
+        var arg = ast.at i
         if (arg.id == 'when')
           var whenTag = arg.at(0)
           var whenTagName = arg.at(0).getTag()
@@ -401,7 +401,7 @@ meta
           declarations.push declaration
           callbacksTagMap[whenTagName] = whenTag
           callbacksCodeMap[whenTagName] = whenTagCode
-          expr.remove(arg)
+          ast.remove(arg)
           next (i)
         else if (arg.id == 'then')
           if (thenCallbackTag != null)
@@ -411,7 +411,7 @@ meta
             thenCallbackCode = arg.at(0)
             var thenDclaration = #quote (var \thenCallback = null)
             declarations.push thenDclaration
-          expr.remove(arg)
+          ast.remove(arg)
           next (i)
         else
           next (i + 1)
@@ -491,8 +491,8 @@ meta
         else
           body
           next ()
-      code.replaceTag('condition', expr.at 0)
-      code.replaceTag('body', expr.at 1)
+      code.replaceTag('condition', ast.at 0)
+      code.replaceTag('body', ast.at 1)
       code
 
 it 'Even has a while statement!'
@@ -514,7 +514,7 @@ it 'Can write macros better'
     macro "@@@"
       precedence: HIGH
       expand:
-        { arg: expr.at 0 } ` this.arg
+        { arg: ast.at 0 } ` this.arg
   var obj = {
     a: 1
     b: 2
@@ -527,7 +527,7 @@ it 'Can write macros even better'
     macro "@@@"
       precedence: HIGH
       expand:
-        `this. ~`expr.at 0
+        `this. ~`ast.at 0
   var obj = {
     a: 1
     b: 2
@@ -540,7 +540,7 @@ it 'Supports readable identifiers'
     macro '@'
       precedence: HIGH
       expand:
-        var member = expr.at 0
+        var member = ast.at 0
         if (member.isTag())
           `this. ~`member
         else
@@ -574,10 +574,10 @@ meta
     precedence: LOW
     arity: ternaryKeyword
     expand: do
-      var declaration = expr.at 0
+      var declaration = ast.at 0
       var assignable = declaration.getAssignable().copy().handleAsTagUse()
-      var yielder = expr.at 1
-      var body = expr.at 2
+      var yielder = ast.at 1
+      var body = ast.at 2
       var yieldCount = 0
       yielder.forEachRecursive
         (e) -> do
@@ -611,7 +611,7 @@ meta
     arity: unary
     expand: do
       give {
-        a: expr.at 0
+        a: ast.at 0
       } ` loop (var \i = 0)
         if (\i < a.length)
           yield \i
@@ -625,8 +625,8 @@ meta
     arity: binary
     expand: do
       give {
-        start: expr.at 0
-        limit: expr.at 1
+        start: ast.at 0
+        limit: ast.at 1
       } ` loop (var \i = start)
         if (\i <= limit)
           yield \i
@@ -652,8 +652,8 @@ meta
     precedence: LOW
     arity: binary
     expand:
-      var tuple = expr.newTuple()
-      var right = expr.at 1
+      var tuple = ast.newTuple()
+      var right = ast.at 1
       loop (right) do
         if (right == ())
           end
@@ -665,8 +665,8 @@ meta
           end
       if (tuple.argCount == 1)
         tuple.transformInto(tuple.at 0)
-      var result = expr.newCall()
-      result.push(expr.at 0)
+      var result = ast.newCall()
+      result.push(ast.at 0)
       result.push tuple
       result
 
