@@ -630,9 +630,9 @@ it 'Supports callable macros'
   #meta
     do
       var concat = ast.createMacro('#concat', 'zero', 'NONE', {
-        expandCall: (expr) ->
-          expr.at(1).asTuple()
-          `''.concat(~`expr.at(1))
+        expandCall: (ast) ->
+          ast.at(1).asTuple()
+          `''.concat(~`ast.at(1))
       })
       ast.keyScope.set(concat.id, concat)
       null
