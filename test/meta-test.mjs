@@ -636,4 +636,4 @@ it 'Supports callable macros'
       })
       ast.keyScope.set(concat.id, concat)
       null
-  #concat('a', 'b', 'c').should.equal('abc')
+  (#concat <- 'a' 'b' 'c').should.equal('abc')
