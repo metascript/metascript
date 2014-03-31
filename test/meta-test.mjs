@@ -1,3 +1,7 @@
+#external
+  describe
+  it
+
 require 'should'
 
 meta
