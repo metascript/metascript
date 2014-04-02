@@ -210,6 +210,7 @@ it 'Should have macros that rename variables'
             else end
           \result
         code.replaceTag('count', count)
+        code.resolveVirtual()
         code
   var vTagTestN = vTagTest 3
   vTagTestN.should.have.length(3)
@@ -330,16 +331,29 @@ meta
               replacementName = 'unquote' + unquoteIndex;
               replacementNameVal = child.newValue replacementName
               replacementNameTag = child.newTag replacementName
-              tagReplacement = #quote (\codeTag.replaceTag(quotedTagName, replacement))
+              tagReplacement = #quote ((\codeTag).replaceTag(quotedTagName, replacement))
             child.replaceWith replacementNameTag
             tagReplacement.replaceTag('quotedTagName', replacementNameVal)
             tagReplacement.replaceTag('replacement', replacement)
             tagReplacements.push tagReplacement
             unquoteIndex += 1
+          ()
       result.replaceTag('code', code)
       result.replaceTag('tagReplacements', tagReplacements)
+      result.resolveVirtual()
       result
 
+meta
+  macro 'do!'
+    precedence: LOW
+    arity: unary
+    expand:
+      (ast.at 0).asTuple()
+      var result = `
+        do
+          ~` (ast.at 0).map(arg -> arg)
+          undefined
+      result
 
 meta
   macro 'when'
@@ -389,7 +403,7 @@ meta
         else if (arg.id == 'then')
           if (thenCallbackTag != null)
             arg.error('Callback \"then\" already declared')
-          else do
+          else do!
             thenCallbackTag = #quote \thenCallback
             thenCallbackCode = arg.at(0)
             var thenDclaration = #quote (var \thenCallback = null)
@@ -398,7 +412,7 @@ meta
           next (i)
         else
           next (i + 1)
-      var processAsync = (e) -> do
+      var processAsync = (e) -> do!
         if (e.id == 'async')
           if (e.count == 0)
             var tExp =
@@ -420,10 +434,12 @@ meta
             wExp.forEachRecursive processAsync
             e.replaceWith wExp
       body.forEachRecursive processAsync
-      `do
+      var result = `do
         ~`declarations
         do
           ~`body
+      result.resolveVirtual()
+      result
 
 
 it 'Gives a way out of callback hell'
@@ -534,21 +550,21 @@ meta
   macro 'foreach'
     precedence: LOW
     arity: ternaryKeyword
-    expand: do
+    expand:
       var declaration = ast.at 0
       var assignable = declaration.getAssignable().copy().handleAsTagUse()
       var yielder = ast.at 1
       var body = ast.at 2
       var yieldCount = 0
       yielder.forEachRecursive
-        (e) -> do
+        (e) -> do!
           if (e.id == 'yield')
             yieldCount += 1
       if (yieldCount != 1) do
         yielder.error('Found ' + yieldCount + ' yield occurrences instead of 1')
         return ()
       yielder.forEachRecursive
-        (e) -> do
+        (e) -> do!
           if (e.id == 'yield')
             var value = e.at(0)
             var assignment = `do
@@ -564,24 +580,28 @@ meta
     precedence: LOW
     arity: unary
     expand:
-      `loop (var \i = 0)
+      var result = `loop (var \i = 0)
         if (\i < (~`ast.at 0).length)
           yield \i
           next (\i + 1)
         else
           end
+      result.resolveVirtual()
+      result
 
 meta
   macro '..'
     precedence: LOW
     arity: binary
     expand:
-      `loop (var \i = (~`ast.at 0))
+      var result = `loop (var \i = (~`ast.at 0))
         if (\i <= (~`ast.at 1))
           yield \i
           next (\i + 1)
         else
           end
+      result.resolveVirtual()
+      result
 
 
 it 'Has a prototype of foreach'
@@ -641,3 +661,11 @@ it 'Supports callable macros'
       ast.keyScope.set(concat.id, concat)
       null
   (#concat <- 'a' 'b' 'c').should.equal('abc')
+
+it 'Handles do blocks with a single value correctly'
+  var f = (v) -> do
+    v
+  f(true).should.equal true
+  var v = do
+    42
+  v.should.equal 42
