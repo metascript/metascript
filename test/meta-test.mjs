@@ -4,29 +4,84 @@
 
 require 'should'
 
-meta
-  macro 'describe'
-    precedence: KEY
-    arity: binaryKeyword
-    expand:
-      var code = #quote describe
-        item
-        () -> body
-      code.replaceTag('item', ast.at 0)
-      code.replaceTag('body', ast.at 1)
-      code
+#meta
+  var buildMacroArguments = (nameAst, argsTuple) ->
+    if (!(argsTuple.isTuple()))
+      argsTuple.error 'Expected tuple argument'
+      return null
+    var
+      ok = true
+      name = nameAst.getSimpleValue()
+      arity = 'unary'
+      precedence = 'LOW'
+      options = {}
+    if (name == null) do
+      nameAst.error 'Invalid name'
+      return null
+    loop (var index = 0)
+      if (index < argsTuple.count)
+        var arg = argsTuple.at index
+        var simpleValue = arg.getSimpleValue()
+        if (simpleValue != null)
+          if (index == 0)
+            arity = simpleValue
+          else if (index == 1)
+            precedence = simpleValue
+          else
+            arg.error('Invalid simple property')
+            ok = false
+        else if (arg.isProperty())
+          var property = arg.getPropertyValue()
+          if (property != null)
+            options[property.key] = property.value
+          else
+            arg.error('Malformed property')
+            ok = false
+        else
+          arg.error('Invalid property')
+          ok = false
+        next index + 1
+    if ok [name, arity, precedence, options] else null
 
-meta
-  macro 'it'
-    precedence: KEY
-    arity: binaryKeyword
-    expand:
-      var code = #quote it
-        item
-        () -> body
-      code.replaceTag('item', ast.at 0)
-      code.replaceTag('body', ast.at 1)
-      code
+  ast.defineSymbol
+    ast.createMacro
+      '#defmacro'
+      'binaryKeyword'
+      'LOW'
+      {
+        preExpand: (ast) ->
+          if (!(ast.count == 2 && (ast.at 1).isTuple())) do
+            ast.error('Expected arguments: name and properties')
+            return null
+          var args = buildMacroArguments(ast.at 0, ast.at 1)
+          if (args != null)
+            ast.defineSymbol
+              ast.createMacro(args[0], args[1], args[2], args[3])
+          null
+      }
+  null
+
+#defmacro 'describe'
+  binaryKeyword
+  KEY
+  expand: (ast) ->
+    var code = #quote describe
+      item
+      () -> body
+    code.replaceTag('item', ast.at 0)
+    code.replaceTag('body', ast.at 1)
+    code
+
+#defmacro 'it'
+  binaryKeyword
+  KEY
+  expand: (ast) ->
+    var code = #quote it
+      item
+      () -> body
+    code.replaceTag('item', ast.at 0)
+    code.replaceTag('body', ast.at 1)
+    code
 
 describe 'Metascript' (
 
@@ -144,27 +199,29 @@ it 'Should handle constructors'
   var c = new C (4)
   c.should.have.property('if', 4)
 
+
 it 'Should handle a simple macro'
-  meta
-    macro "moo"
-      precedence: KEY
-      expand: do
-        var code = #quote ('moo ' + (arg))
-        code.replaceTag('arg', ast.at 0)
-        give code
+  #defmacro "moo"
+    unary
+    KEY
+    expand: (ast) ->
+      var code = #quote ('moo ' + (arg))
+      code.replaceTag('arg', ast.at 0)
+      code
 
   (moo 42).should.equal('moo 42')
   (moo 69).should.equal('moo 69')
   (moo ('Hello '+ 'meta!')).should.equal('moo Hello meta!')
 
+
 it 'Should handle a macro involving \"this\"'
-  meta
-    macro "@@@"
-      precedence: HIGH
-      expand:
-        var code = #quote this.arg
-        code.replaceTag('arg', ast.at 0)
-        code
+  #defmacro "@@@"
+    unary
+    HIGH
+    expand: (ast) ->
+      var code = #quote this.arg
+      code.replaceTag('arg', ast.at 0)
+      code
   var obj = {
     a: 1
     b: 2
@@ -173,18 +230,18 @@ it 'Should handle a macro involving \"this\"'
   obj.m().should.equal 3
 
 it 'Should have a proper \"@\" operator'
-  meta
-    macro '@'
-      precedence: HIGH
-      expand:
-        var member = ast.at 0
-        var code =
-          if (member.isTag())
-            #quote this.member
-          else
-            #quote this[member]
-        code.replaceTag('member', member)
-        code
+  #defmacro '@'
+    unary
+    HIGH
+    expand: (ast) ->
+      var member = ast.at 0
+      var code =
+        if (member.isTag())
+          #quote this.member
+        else
+          #quote this[member]
+      code.replaceTag('member', member)
+      code
   var obj = {
     a: 1
     b: 2
@@ -196,22 +253,21 @@ it 'Should have a proper \"@\" operator'
   obj.m2('a', 'aa').should.equal 42
 
 it 'Should have macros that rename variables'
-  meta
-    macro 'vTagTest'
-      precedence: KEY
-      expand:
-        var count = ast.at 0
-        var code = #quote do
-          var \result = []
-          loop (var \i = 0)
-            if (\i < count)
-              \result.push(\i)
-              next (\i + 1)
-            else end
-          \result
-        code.replaceTag('count', count)
-        code.resolveVirtual()
-        code
+  #defmacro 'vTagTest'
+    unary
+    KEY
+    expand: (ast) ->
+      var count = ast.at 0
+      var code = #quote do
+        var \result = []
+        loop (var \i = 0)
+          if (\i < count)
+            \result.push(\i)
+            next (\i + 1)
+          else \result
+      code.replaceTag('count', count)
+      code.resolveVirtual()
+      code
   var vTagTestN = vTagTest 3
   vTagTestN.should.have.length(3)
   vTagTestN.should.have.property(0, 0)
@@ -289,96 +345,89 @@ it 'Should handle && short circuit'
   t.should.equal false
 
 it 'Can replace tags with arrays inside code'
-  meta
-    macro 'addTwice'
-      arity: binary
-      expand:
-        var left = ast.at 0
-        var right = ast.at 1
-        var code = #quote (left += right)
-        code.replaceTag('left', left)
-        code.replaceTag('right', right)
-        var result = #quote (do code)
-        result.replaceTag('code', [code, code])
-        result
+  #defmacro 'addTwice'
+    binary
+    expand: (ast) ->
+      var left = ast.at 0
+      var right = ast.at 1
+      var code = #quote (left += right)
+      code.replaceTag('left', left)
+      code.replaceTag('right', right)
+      var result = #quote (do code)
+      result.replaceTag('code', [code, code])
+      result
   var a = 0
   a addTwice 1
   a.should.equal 2
 
 
-meta
-  macro '~`'
-    arity: unary
-    expand: ()
+#defmacro '~`'
+  unary
+  expand: () -> ()
 
-meta
-  macro '`'
-    precedence: LOW
-    arity: unary
-    expand:
-      var code = ast.at 0
-      var result = #quote do
-        var \codeTag = #quote code
-        tagReplacements
-        \codeTag
-      var tagReplacements = []
-      var unquoteIndex = 1
-      code.forEachRecursive
-        (child) -> do
-          if (child.id == '~`')
-            var
-              replacement = child.at 0
-              replacementName = 'unquote' + unquoteIndex;
-              replacementNameVal = child.newValue replacementName
-              replacementNameTag = child.newTag replacementName
-              tagReplacement = #quote ((\codeTag).replaceTag(quotedTagName, replacement))
-            child.replaceWith replacementNameTag
-            tagReplacement.replaceTag('quotedTagName', replacementNameVal)
-            tagReplacement.replaceTag('replacement', replacement)
-            tagReplacements.push tagReplacement
-            unquoteIndex += 1
-          ()
-      result.replaceTag('code', code)
-      result.replaceTag('tagReplacements', tagReplacements)
-      result.resolveVirtual()
-      result
+#defmacro '`'
+  unary
+  LOW
+  expand: (ast) ->
+    var code = ast.at 0
+    var result = #quote do
+      var \codeTag = #quote code
+      tagReplacements
+      \codeTag
+    var tagReplacements = []
+    var unquoteIndex = 1
+    code.forEachRecursive
+      (child) -> do
+        if (child.id == '~`')
+          var
+            replacement = child.at 0
+            replacementName = 'unquote' + unquoteIndex;
+            replacementNameVal = child.newValue replacementName
+            replacementNameTag = child.newTag replacementName
+            tagReplacement = #quote ((\codeTag).replaceTag(quotedTagName, replacement))
+          child.replaceWith replacementNameTag
+          tagReplacement.replaceTag('quotedTagName', replacementNameVal)
+          tagReplacement.replaceTag('replacement', replacement)
+          tagReplacements.push tagReplacement
+          unquoteIndex += 1
+        ()
+    result.replaceTag('code', code)
+    result.replaceTag('tagReplacements', tagReplacements)
+    result.resolveVirtual()
+    result
 
-meta
-  macro 'do!'
-    precedence: LOW
-    arity: unary
-    expand:
-      (ast.at 0).asTuple()
-      var result = `
-        do
-          ~` (ast.at 0).map(arg -> arg)
-          undefined
-      result
+#defmacro 'do!'
+  unary
+  LOW
+  expand: (ast) ->
+    (ast.at 0).asTuple()
+    var result = `
+      do
+        ~` (ast.at 0).map(arg -> arg)
+        undefined
+    result
 
-meta
-  macro 'when'
-    precedence: LOW
-    arity: binaryKeyword
-    expand: ()
 
-meta
-  macro 'then'
-    precedence: LOW
-    arity: unary
-    expand: ()
+#defmacro when
+  binaryKeyword
+  LOW
+  expand: () -> ()
 
-meta
-  macro 'async'
-    precedence: KEY
-    arity: optional
-    expand: ()
+#defmacro then
+  unary
+  LOW
+  expand: () -> ()
 
-meta
-  macro 'now'
-    precedence: LOW
-    arity: unary
-    dependent: ['when', 'then']
-    expand:
+#defmacro async
+  optional
+  KEY
+  expand: () -> ()
+
+#defmacro now
+  unary
+  LOW
+  dependent: ['when', 'then']
+  expand: (ast) ->
       var declarations = []
       var callbacksTagMap = new Object(null)
       var callbacksCodeMap = new Object(null)
@@ -470,20 +519,19 @@ it 'Gives a way out of callback hell'
     else end
 
 
-meta
-  macro "while"
-    precedence: LOW
-    arity: binaryKeyword
-    expand: do
-      var code = #quote loop ()
-        if (!(condition))
-          end
-        else
-          body
-          next ()
-      code.replaceTag('condition', ast.at 0)
-      code.replaceTag('body', ast.at 1)
-      code
+#defmacro "while"
+  binaryKeyword
+  LOW
+  expand: (ast) ->
+    var code = #quote loop ()
+      if (!(condition))
+        end
+      else
+        body
+        next ()
+    code.replaceTag('condition', ast.at 0)
+    code.replaceTag('body', ast.at 1)
+    code
 
 it 'Even has a while statement!'
   var (c = 1, r = '')
@@ -500,11 +548,11 @@ it 'Still supports simple expressions'
   (do (var a = 'a', a = a + a, a)).should.equal "aa"
 
 it 'Can write macros better'
-  meta
-    macro "@@@"
-      precedence: HIGH
-      expand:
-        `this. ~`ast.at 0
+  #defmacro "@@@"
+    unary
+    HIGH
+    expand: (ast) ->
+      `this. ~`ast.at 0
   var obj = {
     a: 1
     b: 2
@@ -513,15 +561,15 @@ it 'Can write macros better'
   obj.m().should.equal 3
 
 it 'Supports readable identifiers'
-  meta
-    macro '@'
-      precedence: HIGH
-      expand:
-        var member = ast.at 0
-        if (member.isTag())
-          `this. ~`member
-        else
-          ` this[~`member]
+  #defmacro '@'
+    unary
+    HIGH
+    expand: (ast) ->
+      var member = ast.at 0
+      if (member.isTag())
+        `this. ~`member
+      else
+        ` this[~`member]
   var obj = {
     a: false
     b: false
@@ -540,68 +588,64 @@ it 'Handles binary keywords properly'
     else false
   result.should.equal true
 
-meta
-  macro 'yield'
-    precedence: LOW
-    arity: unary
-    expand: ()
+#defmacro 'yield'
+  unary
+  LOW
+  expand: () -> ()
 
-meta
-  macro 'foreach'
-    precedence: LOW
-    arity: ternaryKeyword
-    expand:
-      var declaration = ast.at 0
-      var assignable = declaration.getAssignable().copy().handleAsTagUse()
-      var yielder = ast.at 1
-      var body = ast.at 2
-      var yieldCount = 0
-      yielder.forEachRecursive
-        (e) -> do!
-          if (e.id == 'yield')
-            yieldCount += 1
-      if (yieldCount != 1) do
-        yielder.error('Found ' + yieldCount + ' yield occurrences instead of 1')
-        return ()
-      yielder.forEachRecursive
-        (e) -> do!
-          if (e.id == 'yield')
-            var value = e.at(0)
-            var assignment = `do
-              (~`assignable) = (~`value)
-              ~`body
-            e.replaceWith assignment
-      `do
-        ~`declaration
-        ~`yielder
+#defmacro 'foreach'
+  ternaryKeyword
+  LOW
+  expand: (ast) ->
+    var declaration = ast.at 0
+    var assignable = declaration.getAssignable().copy().handleAsTagUse()
+    var yielder = ast.at 1
+    var body = ast.at 2
+    var yieldCount = 0
+    yielder.forEachRecursive
+      (e) -> do!
+        if (e.id == 'yield')
+          yieldCount += 1
+    if (yieldCount != 1) do
+      yielder.error('Found ' + yieldCount + ' yield occurrences instead of 1')
+      return ()
+    yielder.forEachRecursive
+      (e) -> do!
+        if (e.id == 'yield')
+          var value = e.at(0)
+          var assignment = `do
+            (~`assignable) = (~`value)
+            ~`body
+          e.replaceWith assignment
+    `do
+      ~`declaration
+      ~`yielder
 
-meta
-  macro 'indexesOf'
-    precedence: LOW
-    arity: unary
-    expand:
-      var result = `loop (var \i = 0)
-        if (\i < (~`ast.at 0).length)
-          yield \i
-          next (\i + 1)
-        else
-          end
-      result.resolveVirtual()
-      result
+#defmacro 'indexesOf'
+  unary
+  LOW
+  expand: (ast) ->
+    var result = `loop (var \i = 0)
+      if (\i < (~`ast.at 0).length)
+        yield \i
+        next (\i + 1)
+      else
+        end
+    result.resolveVirtual()
+    result
 
-meta
-  macro '..'
-    precedence: LOW
-    arity: binary
-    expand:
-      var result = `loop (var \i = (~`ast.at 0))
-        if (\i <= (~`ast.at 1))
-          yield \i
-          next (\i + 1)
-        else
-          end
-      result.resolveVirtual()
-      result
+#defmacro '..'
+  binary
+  LOW
+  expand: (ast) ->
+    var result = `loop (var \i = (~`ast.at 0))
+      if (\i <= (~`ast.at 1))
+        yield \i
+        next (\i + 1)
+      else
+        end
+    result.resolveVirtual()
+    result
 
 
 it 'Has a prototype of foreach'
@@ -616,6 +660,49 @@ it 'Has a prototype of foreach'
     r += v
   r.should.equal(3 + 4 + 5)
 
+
+it 'Applies element and call precedences correctly'
+  var o = {
+    p: {a: [s -> s], f: () -> ( this.a ), m: ()->( this.p.a[0]('Hi!').length )}
+  }
+  o.p.f()[0]('Hi!').should.equal 'Hi!'
+  o['p']['a'][0]('Hola!').should.equal 'Hola!'
+
+it 'Handles call associativity correctly'
+  var o = {
+    f1: v ->
+      v.should.equal 1
+      o.f2
+    f2: v ->
+      v.should.equal 2
+      o.f3
+    f3: v ->
+      v.should.equal 3
+      4
+  }
+  o.f1(1)(2)(3).should.equal 4
+
+it 'Supports callable macros'
+  #meta
+    do
+      var concat = ast.createMacro('#concat', 'zero', 'NONE', {
+        expandCall: (ast) ->
+          ast.at(1).asTuple()
+          `''.concat(~`ast.at(1))
+      })
+      ast.keyScope.set(concat.id, concat)
+      null
+  #concat('a', 'b', 'c').should.equal('abc')
+
+it 'Handles do blocks with a single value correctly'
+  var f = (v) -> do
+    v
+  f(true).should.equal true
+  var v = do
+    42
+  v.should.equal 42
+
+'''SKIP-ME
 meta
   macro '<-'
     precedence: LOW
@@ -642,30 +729,4 @@ meta
 it 'Can simplify function calls'
   var f = (a, b, c) -> a + b + c
   (f <- 'a' 'b' 'c').should.equal('abc')
-
-it 'Applies element and call precedences correctly'
-  var o = {
-    p: {a: [s -> s], f: () -> ( this.a ), m: ()->( this.p.a[0]('Hi!').length )}
-  }
-  o.p.f()[0]('Hi!').should.equal 'Hi!'
-  o['p']['a'][0]('Hola!').should.equal 'Hola!'
-
-it 'Supports callable macros'
-  #meta
-    do
-      var concat = ast.createMacro('#concat', 'zero', 'NONE', {
-        expandCall: (ast) ->
-          ast.at(1).asTuple()
-          `''.concat(~`ast.at(1))
-      })
-      ast.keyScope.set(concat.id, concat)
-      null
-  (#concat <- 'a' 'b' 'c').should.equal('abc')
-
-it 'Handles do blocks with a single value correctly'
-  var f = (v) -> do
-    v
-  f(true).should.equal true
-  var v = do
-    42
-  v.should.equal 42
+SKIP-ME
