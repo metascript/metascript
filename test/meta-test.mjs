@@ -4,67 +4,10 @@
 
 require 'should'
 
-#meta
-  var buildMacroArguments = (nameAst, argsTuple) ->
-    if (!(argsTuple.isTuple()))
-      argsTuple.error 'Expected tuple argument'
-      return null
-    var
-      ok = true
-      name = nameAst.getSimpleValue()
-      arity = 'unary'
-      precedence = 'LOW'
-      options = {}
-    if (name == null) do
-      nameAst.error 'Invalid name'
-      return null
-    loop (var index = 0)
-      if (index < argsTuple.count)
-        var arg = argsTuple.at index
-        var simpleValue = arg.getSimpleValue()
-        if (simpleValue != null)
-          if (index == 0)
-            arity = simpleValue
-          else if (index == 1)
-            precedence = simpleValue
-          else
-            arg.error('Invalid simple property')
-            ok = false
-        else if (arg.isProperty())
-          var property = arg.getPropertyValue()
-          if (property != null)
-            options[property.key] = property.value
-          else
-            arg.error('Malformed property')
-            ok = false
-        else
-          arg.error('Invalid property')
-          ok = false
-        next index + 1
-    if ok [name, arity, precedence, options] else null
-
-  ast.defineSymbol
-    ast.createMacro
-      '#defmacro'
-      'binaryKeyword'
-      'LOW'
-      {
-        preExpand: (ast) ->
-          if (!(ast.count == 2 && (ast.at 1).isTuple())) do
-            ast.error('Expected arguments: name and properties')
-            return null
-          var args = buildMacroArguments(ast.at 0, ast.at 1)
-          if (args != null)
-            ast.defineSymbol
-              ast.createMacro(args[0], args[1], args[2], args[3])
-          null
-      }
-  null
-
 #defmacro 'describe'
   binaryKeyword
   KEY
-  expand: (ast) ->
+  expand: () ->
     var code = #quote describe
       item
       () -> body
@@ -75,7 +18,7 @@ require 'should'
 #defmacro 'it'
   binaryKeyword
   KEY
-  expand: (ast) ->
+  expand: () ->
     var code = #quote it
       item
       () -> body
@@ -204,7 +147,7 @@ it 'Should handle a simple macro'
   #defmacro "moo"
     unary
     KEY
-    expand: (ast) ->
+    expand: () ->
       var code = #quote ('moo ' + (arg))
       code.replaceTag('arg', ast.at 0)
       code
@@ -218,7 +161,7 @@ it 'Should handle a macro involving \"this\"'
   #defmacro "@@@"
     unary
     HIGH
-    expand: (ast) ->
+    expand: () ->
       var code = #quote this.arg
       code.replaceTag('arg', ast.at 0)
       code
@@ -233,7 +176,7 @@ it 'Should have a proper \"@\" operator'
   #defmacro '@'
     unary
     HIGH
-    expand: (ast) ->
+    expand: () ->
       var member = ast.at 0
       var code =
         if (member.isTag())
@@ -256,7 +199,7 @@ it 'Should have macros that rename variables'
   #defmacro 'vTagTest'
     unary
     KEY
-    expand: (ast) ->
+    expand: () ->
       var count = ast.at 0
       var code = #quote do
         var \result = []
@@ -347,7 +290,7 @@ it 'Should handle && short circuit'
 it 'Can replace tags with arrays inside code'
   #defmacro 'addTwice'
     binary
-    expand: (ast) ->
+    expand: () ->
       var left = ast.at 0
       var right = ast.at 1
       var code = #quote (left += right)
@@ -359,53 +302,6 @@ it 'Can replace tags with arrays inside code'
   var a = 0
   a addTwice 1
   a.should.equal 2
-
-
-#defmacro '~`'
-  unary
-  expand: () -> ()
-
-#defmacro '`'
-  unary
-  LOW
-  expand: (ast) ->
-    var code = ast.at 0
-    var result = #quote do
-      var \codeTag = #quote code
-      tagReplacements
-      \codeTag
-    var tagReplacements = []
-    var unquoteIndex = 1
-    code.forEachRecursive
-      (child) -> do
-        if (child.id == '~`')
-          var
-            replacement = child.at 0
-            replacementName = 'unquote' + unquoteIndex;
-            replacementNameVal = child.newValue replacementName
-            replacementNameTag = child.newTag replacementName
-            tagReplacement = #quote ((\codeTag).replaceTag(quotedTagName, replacement))
-          child.replaceWith replacementNameTag
-          tagReplacement.replaceTag('quotedTagName', replacementNameVal)
-          tagReplacement.replaceTag('replacement', replacement)
-          tagReplacements.push tagReplacement
-          unquoteIndex += 1
-        ()
-    result.replaceTag('code', code)
-    result.replaceTag('tagReplacements', tagReplacements)
-    result.resolveVirtual()
-    result
-
-#defmacro 'do!'
-  unary
-  LOW
-  expand: (ast) ->
-    (ast.at 0).asTuple()
-    var result = `
-      do
-        ~` (ast.at 0).map(arg -> arg)
-        undefined
-    result
 
 
 #defmacro when
@@ -427,7 +323,7 @@ it 'Can replace tags with arrays inside code'
   unary
   LOW
   dependent: ['when', 'then']
-  expand: (ast) ->
+  expand: () ->
       var declarations = []
       var callbacksTagMap = new Object(null)
       var callbacksCodeMap = new Object(null)
@@ -522,7 +418,7 @@ it 'Gives a way out of callback hell'
 #defmacro "while"
   binaryKeyword
   LOW
-  expand: (ast) ->
+  expand: () ->
     var code = #quote loop ()
       if (!(condition))
         end
@@ -551,7 +447,7 @@ it 'Can write macros better'
   #defmacro "@@@"
     unary
     HIGH
-    expand: (ast) ->
+    expand: () ->
       `this. ~`ast.at 0
   var obj = {
     a: 1
@@ -564,7 +460,7 @@ it 'Supports readable identifiers'
   #defmacro '@'
     unary
     HIGH
-    expand: (ast) ->
+    expand: () ->
       var member = ast.at 0
       if (member.isTag())
         `this. ~`member
@@ -596,7 +492,7 @@ it 'Handles binary keywords properly'
 #defmacro 'foreach'
   ternaryKeyword
   LOW
-  expand: (ast) ->
+  expand: () ->
     var declaration = ast.at 0
     var assignable = declaration.getAssignable().copy().handleAsTagUse()
     var yielder = ast.at 1
@@ -624,7 +520,7 @@ it 'Handles binary keywords properly'
 #defmacro 'indexesOf'
   unary
   LOW
-  expand: (ast) ->
+  expand: () ->
     var result = `loop (var \i = 0)
       if (\i < (~`ast.at 0).length)
         yield \i
@@ -637,7 +533,7 @@ it 'Handles binary keywords properly'
 #defmacro '..'
   binary
   LOW
-  expand: (ast) ->
+  expand: () ->
     var result = `loop (var \i = (~`ast.at 0))
       if (\i <= (~`ast.at 1))
         yield \i
