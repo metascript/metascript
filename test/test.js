@@ -124,8 +124,12 @@ describe('Meta.Compiler', function () {
       ]), '(b (l id:"a" op:"<==" id:"b" op:"<!>" op:"->" id:"_" op:"\\" id:"$" op:"/" id:"z"))');
 
       compareArrayToTokenDump(parseArray([
-        'a #1 b #abc# #-> #_\\$/z'
-      ]), '(b (l id:"a" op:"#1" id:"b" op:"#abc#" op:"#" op:"->" op:"#_" op:"\\" id:"$" op:"/" id:"z"))');
+        'a #1 b #abc# # -> #-> #_\\$/z'
+      ]), '(b (l id:"a" op:"#1" id:"b" op:"#abc#" op:"#" op:"->" op:"#->" op:"#_" op:"\\" id:"$" op:"/" id:"z"))');
+
+      compareArrayToTokenDump(parseArray([
+        '#abc! #a->b! ##a-b #-a-b-c?'
+      ]), '(b (l op:"#abc!" op:"#a->b!" op:"##a-b" op:"#-a-b-c?"))');
 
       compareArrayToTokenDump(parseArray([
         '#1 ` ~ %'
