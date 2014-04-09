@@ -598,6 +598,18 @@ it 'Handles do blocks with a single value correctly'
     42
   v.should.equal 42
 
+it 'Can import macro modules'
+  #meta-import 'test/meta-module'
+  var obj = {
+    a: 1
+    b: 2
+  }
+  obj['aaa'] = 42
+  obj.m1 = () -> (@a + @b)
+  obj.m2 = (x, y) -> @(x + y)
+  obj.m1().should.equal 3
+  obj.m2('a', 'aa').should.equal 42
+
 '''SKIP-ME
 meta
   macro '<-'

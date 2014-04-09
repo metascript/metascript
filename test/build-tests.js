@@ -3,6 +3,14 @@ require('should');
 
 
 describe('mjs', function () {
+  it('Should compile the test meta module', function(done) {
+    exec('./bin/mjs ./test/meta-module.mjs', function (error, stdout, stderr) {
+      stdout.toString().should.equal('');
+      stderr.toString().should.equal('');
+      if (error) error.should.equal(null);
+      done();
+    });
+  });
   it('Should compile the test suite', function(done) {
     exec('./bin/mjs ./test/meta-test.mjs', function (error, stdout, stderr) {
       stdout.toString().should.equal('');
