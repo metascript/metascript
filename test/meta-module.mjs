@@ -1,5 +1,5 @@
 
-#meta-module
+#metamodule
   #keepmacro @
     unary
     HIGH
