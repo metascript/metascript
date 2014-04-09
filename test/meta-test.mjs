@@ -599,7 +599,7 @@ it 'Handles do blocks with a single value correctly'
   v.should.equal 42
 
 it 'Can import macro modules'
-  #meta-import 'test/meta-module'
+  #meta-import meta-module
   var obj = {
     a: 1
     b: 2
