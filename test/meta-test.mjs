@@ -7,24 +7,18 @@ require 'should'
 #defmacro 'describe'
   binaryKeyword
   KEY
-  expand: () ->
-    var code = #quote describe
-      item
-      () -> body
-    code.replaceTag('item', ast.at 0)
-    code.replaceTag('body', ast.at 1)
-    code
+  expand: (item, body) ->
+    `describe
+      ~`item
+      () -> ~`body
 
 #defmacro 'it'
   binaryKeyword
   KEY
-  expand: () ->
-    var code = #quote it
-      item
-      () -> body
-    code.replaceTag('item', ast.at 0)
-    code.replaceTag('body', ast.at 1)
-    code
+  expand: (item, body) ->
+    `it
+      ~`item
+      () -> ~`body
 
 describe 'Metascript' (
 
@@ -147,9 +141,9 @@ it 'Should handle a simple macro'
   #defmacro "moo"
     unary
     KEY
-    expand: () ->
+    expand: (arg) ->
       var code = #quote ('moo ' + (arg))
-      code.replaceTag('arg', ast.at 0)
+      code.replaceTag('arg', arg)
       code
 
   (moo 42).should.equal('moo 42')
@@ -161,9 +155,9 @@ it 'Should handle a macro involving \"this\"'
   #defmacro "@@@"
     unary
     HIGH
-    expand: () ->
+    expand: (member) ->
       var code = #quote this.arg
-      code.replaceTag('arg', ast.at 0)
+      code.replaceTag('arg', member)
       code
   var obj = {
     a: 1
@@ -176,8 +170,7 @@ it 'Should have a proper \"@\" operator'
   #defmacro '@'
     unary
     HIGH
-    expand: () ->
-      var member = ast.at 0
+    expand: (member) ->
       var code =
         if (member.isTag())
           #quote this.member
@@ -199,8 +192,7 @@ it 'Should have macros that rename variables'
   #defmacro 'vTagTest'
     unary
     KEY
-    expand: () ->
-      var count = ast.at 0
+    expand: (count) ->
       var code = #quote do
         var \result = []
         loop (var \i = 0)
@@ -290,9 +282,7 @@ it 'Should handle && short circuit'
 it 'Can replace tags with arrays inside code'
   #defmacro 'addTwice'
     binary
-    expand: () ->
-      var left = ast.at 0
-      var right = ast.at 1
+    expand: (left, right) ->
       var code = #quote (left += right)
       code.replaceTag('left', left)
       code.replaceTag('right', right)
@@ -415,20 +405,6 @@ it 'Gives a way out of callback hell'
     else end
 
 
-#defmacro "while"
-  binaryKeyword
-  LOW
-  expand: () ->
-    var code = #quote loop ()
-      if (!(condition))
-        end
-      else
-        body
-        next ()
-    code.replaceTag('condition', ast.at 0)
-    code.replaceTag('body', ast.at 1)
-    code
-
 it 'Even has a while statement!'
   var (c = 1, r = '')
   while (c <= 3)
@@ -447,8 +423,8 @@ it 'Can write macros better'
   #defmacro "@@@"
     unary
     HIGH
-    expand: () ->
-      `this. ~`ast.at 0
+    expand: (member) ->
+      `this. ~`member
   var obj = {
     a: 1
     b: 2
@@ -460,8 +436,7 @@ it 'Supports readable identifiers'
   #defmacro '@'
     unary
     HIGH
-    expand: () ->
-      var member = ast.at 0
+    expand: (member) ->
       if (member.isTag())
         `this. ~`member
       else
@@ -492,11 +467,8 @@ it 'Handles binary keywords properly'
 #defmacro 'foreach'
   ternaryKeyword
   LOW
-  expand: () ->
-    var declaration = ast.at 0
+  expand: (declaration, yielder, body) ->
     var assignable = declaration.getAssignable().copy().handleAsTagUse()
-    var yielder = ast.at 1
-    var body = ast.at 2
     var yieldCount = 0
     yielder.forEachRecursive
       (e) -> do!
@@ -520,9 +492,9 @@ it 'Handles binary keywords properly'
 #defmacro 'indexesOf'
   unary
   LOW
-  expand: () ->
+  expand: (array) ->
     var result = `loop (var \i = 0)
-      if (\i < (~`ast.at 0).length)
+      if (\i < (~`array).length)
         yield \i
         next (\i + 1)
       else
@@ -533,9 +505,9 @@ it 'Handles binary keywords properly'
 #defmacro '..'
   binary
   LOW
-  expand: () ->
-    var result = `loop (var \i = (~`ast.at 0))
-      if (\i <= (~`ast.at 1))
+  expand: (start, limit) ->
+    var result = `loop (var \i = (~`start))
+      if (\i <= (~`limit))
         yield \i
         next (\i + 1)
       else
@@ -609,6 +581,27 @@ it 'Can import macro modules'
   obj.m2 = (x, y) -> @(x + y)
   obj.m1().should.equal 3
   obj.m2('a', 'aa').should.equal 42
+
+
+it 'Has a threading operator'
+  var obj = {
+    a: {
+      x: {
+        v: 42
+        get: (member) -> this[member]
+      }
+      get: (member) -> this[member]
+    }
+    get: (member) -> this[member]
+  }
+  (obj .-> (a, x, v)).should.equal 42
+  (obj.get('a').get('x').get('v')).should.equal 42
+  (obj .-> (get('a'), get('x'), get('v'))).should.equal 42
+  (obj .-> (get('a'), get('x').get('v'))).should.equal 42
+  (obj .-> (get('a').get('x').get('v'))).should.equal 42
+  (obj .-> (a.get('x'), get('v'))).should.equal 42
+  (obj .-> (get('a'), get('x').v)).should.equal 42
+  (obj .-> (a, x.get('v'))).should.equal 42
 
 '''SKIP-ME
 meta
