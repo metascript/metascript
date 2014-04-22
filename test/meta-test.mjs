@@ -614,10 +614,15 @@ it 'Has lambda expressions'
 
 
 it 'Has explicit function calls'
-  var f = (a, b, c) -> a + b + c
-  (f <- ('a', 'b', 'c')).should.equal('abc')
-  var r = f
+  var f1 = (a) -> a + a
+  var f3 = (a, b, c) -> a + b + c
+  (f3 <- ('a', 'b', 'c')).should.equal('abc')
+  var r = f3
     40
     1
     1
   r.should.equal 42
+  (f1 <- 'a').should.equal('aa')
+  r = f1
+    1
+  r.should.equal 2
