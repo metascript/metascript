@@ -612,31 +612,12 @@ it 'Has lambda expressions'
   (f2() == ()).should.equal true
   f3(1, 2).should.equal 3
 
-'''SKIP-ME
-meta
-  macro '<-'
-    precedence: LOW
-    arity: binary
-    expand:
-      var tuple = ast.newTuple()
-      var right = ast.at 1
-      loop (right) do
-        if (right == ())
-          end
-        else if (right.isCall())
-          tuple.push(right.at 0)
-          next(right.at 0)
-        else
-          tuple.push(right)
-          end
-      if (tuple.argCount == 1)
-        tuple.transformInto(tuple.at 0)
-      var result = ast.newCall()
-      result.push(ast.at 0)
-      result.push tuple
-      result
 
-it 'Can simplify function calls'
+it 'Has explicit function calls'
   var f = (a, b, c) -> a + b + c
-  (f <- 'a' 'b' 'c').should.equal('abc')
-SKIP-ME
+  (f <- ('a', 'b', 'c')).should.equal('abc')
+  var r = f
+    40
+    1
+    1
+  r.should.equal 42
