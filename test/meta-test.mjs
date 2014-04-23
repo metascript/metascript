@@ -166,7 +166,7 @@ it 'Should handle a macro involving \"this\"'
   }
   obj.m().should.equal 3
 
-it 'Should have a proper \"@\" operator'
+it 'Can define a \"@\" operator'
   #defmacro '@'
     unary
     HIGH
@@ -577,8 +577,8 @@ it 'Can import macro modules'
     b: 2
   }
   obj['aaa'] = 42
-  obj.m1 = () -> (@a + @b)
-  obj.m2 = (x, y) -> @(x + y)
+  obj.m1 = () -> (@%^a + @%^b)
+  obj.m2 = (x, y) -> @%^(x + y)
   obj.m1().should.equal 3
   obj.m2('a', 'aa').should.equal 42
 
@@ -626,3 +626,20 @@ it 'Has explicit function calls'
   r = f1
     1
   r.should.equal 2
+
+it 'Has a proper \"@\" operator'
+  var obj = {
+    a: 1
+    b: 2
+    aaa: 42
+    m1: #-> (@a + @b)
+    m2: (x, y) -> @(x + y)
+    m3: (x, y) -> @[x + y]
+    m4: p -> @[p]
+    m5: #-> @[]
+  }
+  obj.m1().should.equal 3
+  obj.m2('a', 'aa').should.equal 42
+  obj.m3('a', 'aa').should.equal 42
+  ((obj.m4 'a') + (obj.m4 'b')).should.equal 3
+  (obj.m5()['a'] + obj.m5()['b']).should.equal 3

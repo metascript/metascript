@@ -1,6 +1,6 @@
 
 #metamodule
-  #keepmacro @
+  #keepmacro @%^
     unary
     HIGH
     expand: (arg) ->
