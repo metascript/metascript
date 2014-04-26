@@ -1,3 +1,5 @@
+require('source-map-support').install()
+
 #external
   describe
   it
@@ -273,11 +275,33 @@ it 'Should handle || short circuit'
   v.should.equal 1
   t.should.equal true
 
+it 'Should handle || short circuit with do blocks'
+  var v = 1
+  var oft = {p1: false, p2: true}
+  var otf = {p1: true, p2: false}
+  var t-ft = ((do (var p1 = oft.p1, v = 1, p1 == true)) || (do (var p2 = oft.p2, v = 2, p2 == true)))
+  v.should.equal 2
+  t-ft.should.equal true
+  var t-tf = ((do (var p1 = otf.p1, v = 1, p1 == true)) || (do (var p2 = otf.p2, v = 2, p2 == true)))
+  v.should.equal 1
+  t-tf.should.equal true
+
 it 'Should handle && short circuit'
   var v = 1
   var t = (false && do (v = 2, give true))
   v.should.equal 1
   t.should.equal false
+
+it 'Should handle && short circuit with do blocks'
+  var v = 1
+  var oft = {p1: false, p2: true}
+  var otf = {p1: true, p2: false}
+  var t-ft = ((do (var p1 = oft.p1, v = 1, p1 == true)) && (do (var p2 = oft.p2, v = 2, p2 == true)))
+  v.should.equal 1
+  t-ft.should.equal false
+  var t-tf = ((do (var p1 = otf.p1, v = 1, p1 == true)) && (do (var p2 = otf.p2, v = 2, p2 == true)))
+  v.should.equal 2
+  t-tf.should.equal false
 
 it 'Can replace tags with arrays inside code'
   #defmacro 'addTwice'
