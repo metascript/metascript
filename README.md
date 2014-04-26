@@ -93,7 +93,7 @@ And finally, the thing I am missing the most is language extensibility, in the f
 Several other languages have inspired me in various ways:
  - [Boo](http://boo.codehaus.org/) is simply amazing, but it is designed with a CLI runtime environment in mind and not a Javascript one.
  - [Roy](http://roy.brianmckenna.org/) is an interesting attempt at providing a [Haskell](http://www.haskell.org/haskellwiki/Haskell)-like language.
- - [Clojurescript](https://github.com/clojure/clojurescript) also provides metaptogramming and is _really_ nice, with the issue that it still has a Lisp-plagued syntax and that it feels "closer" to the [Clojure](http://clojure.org/) ecosystem than to the Javascript one...
+ - [Clojurescript](https://github.com/clojure/clojurescript) also provides metaprogramming and is _really_ nice, with the issue that it still has a Lisp-plagued syntax and that it feels "closer" to the [Clojure](http://clojure.org/) ecosystem than to the Javascript one...
 
 In the end I decided that none of them fits my bill completely, and I implemented Metascript.
 
