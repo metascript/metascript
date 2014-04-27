@@ -12,12 +12,12 @@
     "mjs": "./bin/mjs"
   },
   "dependencies": {
-    "escodegen": ">=0.0.28"
+    "escodegen": ">=0.0.28",
+    "source-map-support": "*"
   },
   "devDependencies": {
     "mocha": "*",
-    "should": "~2.0.2",
-    "source-map-support": "*"
+    "should": "~2.0.2"
   },
   "scripts": {
     "prepublish": "node ./lib/build-macros.js",
