@@ -651,6 +651,27 @@ it 'Has explicit function calls'
     1
   r.should.equal 2
 
+it 'Does not expand quoted code'
+  #defmacro #m1
+    unary
+    LOW
+    expand: (arg) -> `((~` arg) = 1)
+  #defmacro #m2
+    unary
+    LOW
+    expand: (arg) ->
+      var code = ` #m1 ~`arg
+      if (code.id == '#m1')
+        `((~` arg) = 2)
+      else
+        arg
+  var x = 0;
+  #m1 x
+  x.should.equal 1
+  #m2 x
+  x.should.equal 2
+
+
 '''SKIPME
 it 'Has a proper \"@\" operator'
   var obj = {
