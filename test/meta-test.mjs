@@ -671,6 +671,13 @@ it 'Does not expand quoted code'
   #m2 x
   x.should.equal 2
 
+it 'Can use imported macros in macros'
+  #metaimport meta-module
+  #defmacro #q-quadruple
+    unary
+    HIGH
+    expand: (arg) -> `2 * #d-double ~`arg
+  (#q-quadruple 1).should.equal 4
 
 '''SKIPME
 it 'Has a proper \"@\" operator'
