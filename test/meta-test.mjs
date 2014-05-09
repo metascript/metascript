@@ -53,7 +53,7 @@ it 'Should handle loops'
   var f = (x) ->
     loop (var r = 1, x)
       if (x > 0)
-        next (r * x, x - 1)
+        next! (r * x, x - 1)
       else
         r
   f(1).should.equal(1)
@@ -200,7 +200,7 @@ it 'Should have macros that rename variables'
         loop (var \i = 0)
           if (\i < count)
             \result.push(\i)
-            next (\i + 1)
+            next! (\i + 1)
           else \result
       code.replaceTag('count', count)
       code.resolveVirtual()
@@ -358,7 +358,7 @@ it 'Can replace tags with arrays inside code'
           callbacksTagMap[whenTagName] = whenTag
           callbacksCodeMap[whenTagName] = whenTagCode
           ast.remove(arg)
-          next (i)
+          next! (i)
         else if (arg.id == 'then')
           if (thenCallbackTag != null)
             arg.error('Callback \"then\" already declared')
@@ -368,9 +368,9 @@ it 'Can replace tags with arrays inside code'
             var thenDclaration = #quote (var \thenCallback = null)
             declarations.push thenDclaration
           ast.remove(arg)
-          next (i)
+          next! (i)
         else
-          next (i + 1)
+          next! (i + 1)
       var processAsync = (e) -> do!
         if (e.id == 'async')
           if (e.count == 0)
@@ -425,7 +425,7 @@ it 'Gives a way out of callback hell'
   loop (var i = 0)
     if (i < activityLog.length)
       activityLog[i].should.equal i
-      next (i + 1)
+      next! (i + 1)
     else end
 
 
@@ -520,7 +520,7 @@ it 'Handles binary keywords properly'
     var result = `loop (var \i = 0)
       if (\i < (~`array).length)
         yield \i
-        next (\i + 1)
+        next! (\i + 1)
       else
         end
     result.resolveVirtual()
@@ -533,7 +533,7 @@ it 'Handles binary keywords properly'
     var result = `loop (var \i = (~`start))
       if (\i <= (~`limit))
         yield \i
-        next (\i + 1)
+        next! (\i + 1)
       else
         end
     result.resolveVirtual()
