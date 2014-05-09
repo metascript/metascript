@@ -66,12 +66,12 @@ it 'Should handle nested do and if'
   var g = (x, y) -> do
     var (a, b) = do
       if (x > 0)
-        give (1, 2)
+        give! (1, 2)
       if (y > 0)
-        give (3, 6)
+        give! (3, 6)
       if (x + y < 0)
-        give (4, 8)
-      give (5, 10)
+        give! (4, 8)
+      give! (5, 10)
     return (b - a)
 
   g(1, 2).should.equal(1)
@@ -264,14 +264,14 @@ it 'Should handle giving void do invocations'
   var v = 0
   var f = () -> do
     v = 1
-    give do
+    give! do
       v = 2
   f()
   v.should.equal 2
 
 it 'Should handle || short circuit'
   var v = 1
-  var t = (true || do (v = 2, give false))
+  var t = (true || do (v = 2, give! false))
   v.should.equal 1
   t.should.equal true
 
@@ -288,7 +288,7 @@ it 'Should handle || short circuit with do blocks'
 
 it 'Should handle && short circuit'
   var v = 1
-  var t = (false && do (v = 2, give true))
+  var t = (false && do (v = 2, give! true))
   v.should.equal 1
   t.should.equal false
 
@@ -345,7 +345,7 @@ it 'Can replace tags with arrays inside code'
       var thenCallbackCode = null
       var body = ast.at 0
       loop (var i = 0)
-        if (i >= ast.count) end
+        if (i >= ast.count) end!
         var arg = ast.at i
         if (arg.id == 'when')
           var whenTag = arg.at(0)
@@ -379,7 +379,7 @@ it 'Can replace tags with arrays inside code'
                 `(\thenCallback = ~`thenCallbackCode)
               else do
                 e.error('Callback \"then\" not declared')
-                give #quote null
+                give! #quote null
             tExp.forEachRecursive processAsync
             e.replaceWith tExp
           else
@@ -389,7 +389,7 @@ it 'Can replace tags with arrays inside code'
                 `((~`callbacksTagMap[wName]) = (~`callbacksCodeMap[wName]))
               else do
                 e.error('Callback \"' + wName + '\" not declared')
-                give #quote null
+                give! #quote null
             wExp.forEachRecursive processAsync
             e.replaceWith wExp
       body.forEachRecursive processAsync
@@ -401,7 +401,7 @@ it 'Can replace tags with arrays inside code'
       result
 
 
-it 'Gives a way out of callback hell'
+it 'give!s a way out of callback hell'
   var caller = (f) -> f()
   var activityLog = []
   var log = (x) -> activityLog.push x
@@ -426,7 +426,7 @@ it 'Gives a way out of callback hell'
     if (i < activityLog.length)
       activityLog[i].should.equal i
       next! (i + 1)
-    else end
+    else end!
 
 
 it 'Even has a while statement!'
@@ -522,7 +522,7 @@ it 'Handles binary keywords properly'
         yield \i
         next! (\i + 1)
       else
-        end
+        end!
     result.resolveVirtual()
     result
 
@@ -535,7 +535,7 @@ it 'Handles binary keywords properly'
         yield \i
         next! (\i + 1)
       else
-        end
+        end!
     result.resolveVirtual()
     result
 

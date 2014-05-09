@@ -489,7 +489,7 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         'a do k', 'b', 'do', 'c', 'd'
-      ]), '<call>(a, <do>(give(<call>(k, <tuple>(b, <do>(c, give(d)))))))');
+      ]), '<call>(a, <do>(give!(<call>(k, <tuple>(b, <do>(c, give!(d)))))))');
 
       compareArrayToExpressionString(combineArray([
         'x = y = z'
@@ -525,11 +525,11 @@ describe('Meta.Compiler', function () {
 
       compareArrayToExpressionString(combineArray([
         '(a, b) -> do', '  a', '  b'
-      ]), '->(<tuple>(a, b), <do>(a, give(b)))');
+      ]), '->(<tuple>(a, b), <do>(a, give!(b)))');
 
       compareArrayToExpressionString(combineArray([
-        '(a, b) -> return do', '  a', '  give b'
-      ]), '->(<tuple>(a, b), return(<do>(a, give(b))))');
+        '(a, b) -> return do', '  a', '  give! b'
+      ]), '->(<tuple>(a, b), return(<do>(a, give!(b))))');
 
       compareArrayToExpressionString(combineArray([
         'do', 'a', 'b'
