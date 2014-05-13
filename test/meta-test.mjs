@@ -632,9 +632,11 @@ it 'Has lambda expressions'
   var f1 = #->()
   var f2 = #->
   var f3 = #->(#1 + #2)
+  var f4 = #->(#arg * 2)
   (f1() == ()).should.equal true
   (f2() == ()).should.equal true
   f3(1, 2).should.equal 3
+  f4(21).should.equal 42
 
 
 it 'Has explicit function calls'
