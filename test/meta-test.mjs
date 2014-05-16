@@ -632,7 +632,7 @@ it 'Has lambda expressions'
   var f1 = #->()
   var f2 = #->
   var f3 = #->(#1 + #2)
-  var f4 = #->(#arg * 2)
+  var f4 = #->(#it * 2)
   (f1() == ()).should.equal true
   (f2() == ()).should.equal true
   f3(1, 2).should.equal 3
