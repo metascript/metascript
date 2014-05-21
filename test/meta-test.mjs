@@ -681,6 +681,28 @@ it 'Can use imported macros in macros'
     expand: (arg) -> `2 * #d-double ~`arg
   (#q-quadruple 1).should.equal 4
 
+it 'Can redefine builtins'
+  #meta
+    var inspect = (require 'util').inspect
+    var old-object-symbol = ast.resolve-in-parent-key-scope '<object>'
+    var new-object-symbol = ast.create-extension
+      old-object-symbol
+      ast ->
+        var properties = (ast.at 0).as-tuple().map #->
+          if (#it.property?())
+            #it
+          else if (#it.tag?())
+            ` (~` #it) : (~` #it)
+          else do
+            #it.error 'Invalid property'
+            ` #
+        `{ (~` properties) }
+    ast.defineSymbol new-object-symbol
+    null
+  var p = 'P'
+  ({p}.p).should.equal 'P'
+
+
 '''SKIPME
 it 'Has a proper \"@\" operator'
   var obj = {
