@@ -595,7 +595,7 @@ it 'Handles do blocks with a single value correctly'
   v.should.equal 42
 
 it 'Can import macro modules'
-  #metaimport meta-module
+  #metaimport 'meta-module'
   var obj = {
     a: 1
     b: 2
@@ -674,7 +674,7 @@ it 'Does not expand quoted code'
   x.should.equal 2
 
 it 'Can use imported macros in macros'
-  #metaimport meta-module
+  #metaimport 'meta-module'
   #defmacro #q-quadruple
     unary
     HIGH
