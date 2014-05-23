@@ -702,6 +702,18 @@ it 'Can redefine builtins'
   var p = 'P'
   ({p}.p).should.equal 'P'
 
+it 'Can handle complex loops'
+  var complex-loop = start ->
+    loop (var current = start, var result = '' + current)
+      if (current == 0)
+        'BAD'
+      else do
+        var half = current / 2
+        if (half == current - 1)
+          result
+        else
+          next! (half, result + current)
+  (complex-loop 4).should.equal '42'
 
 '''SKIPME
 it 'Has a proper \"@\" operator'
