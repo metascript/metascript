@@ -715,6 +715,10 @@ it 'Can handle complex loops'
           next! (half, result + current)
   (complex-loop 4).should.equal '42'
 
+it 'Can parse empty lambdas'
+  var empty = #->
+  (empty() == undefined).should.equal true
+
 '''SKIPME
 it 'Has a proper \"@\" operator'
   var obj = {
