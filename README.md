@@ -48,9 +48,9 @@ A concise definition of a function that returns the factorial of its argument (n
 var f = (x) ->
   loop (var r = 1, x)
     if (x > 0)
-      next (r * x, x - 1)
+      next! (r * x, x - 1)
     else
-      give r
+      give! r
 f(1).should.equal(1)
 f(2).should.equal(2)
 f(3).should.equal(6)
@@ -66,7 +66,7 @@ meta
     expand: do
       var code = \<- this.arg
       code.replaceTag('arg', expr.argAt(0))
-      give code
+      give! code
 var obj = {
   a: 1
   b: 2
@@ -231,11 +231,11 @@ var status =
   if ok do
     console.log 'Starting up'
     engine.power 100
-    give 'moving'
+    give! 'moving'
   else do
     console.log 'Stopping'
     engine.power 0
-    give 'stopped'
+    give! 'stopped'
 ```
 
 The meaning should be clear: status will be either 'moving' or 'stopped', the _if_ works like an expression selecting one of the two values, and the two _do_ code blocks execute 'statements' (they evaluate expressions but discard their values) but they also 'return' values so that the _if_ expression can use them.
@@ -275,15 +275,15 @@ The rules are simple:
 - _if_ and _do_ expressions must produce the number of results required from their context
     - _if_ expressions produce results by simply evaluating them
     - since _do_ expressions already evaluate a sequence of expressions, if they must produce a value they can be terminated in two ways:
-      - with a _give_ statement that specifies the result of the _do_, or
+      - with a _give!_ statement that specifies the result of the _do_, or
       - their last expression is assumed to be the result of the _do_.
 - Function invocations are like a binary operator that requires one value on the left (the callee) and an argument on the right, which can be a tuple (the arguments).
 - Every other operator requires exactly one value for each operand.
 
-In Metascript it is necessary to specify the _do_ keyword every time a tuple is provided in a context where values are required but it must not be evaluated as a tuple. In this case the result of the _do_ expression (which _could_ be a tuple!) must be provided by a _give_ expression.
-Of course _give_ expressions can be used inside conditional statements (_if_ branches), in any case when "evaluated" they terminate the current _do_ block and provide its result(s).
+In Metascript it is necessary to specify the _do_ keyword every time a tuple is provided in a context where values are required but it must not be evaluated as a tuple. In this case the result of the _do_ expression (which _could_ be a tuple!) must be provided by a _give!_ expression.
+Of course _give!_ expressions can be used inside conditional statements (_if_ branches), in any case when "evaluated" they terminate the current _do_ block and provide its result(s).
 
-To keep the code less verbose I also made the _give_ at the end of a _do_ optional, assuming that the last expression of the _do_ sequence will be its result (the suggestion came from [Bamboo](http://bamboo.github.io/), the desigmer of [Boo](http://boo.codehaus.org/)). Therefore the above example can also be written like this:
+To keep the code less verbose I also made the _give!_ at the end of a _do_ optional, assuming that the last expression of the _do_ sequence will be its result (the suggestion came from [Bamboo](http://bamboo.github.io/), the desigmer of [Boo](http://boo.codehaus.org/)). Therefore the above example can also be written like this:
 
 ```
 var status =
@@ -316,22 +316,22 @@ Let's write the 'factorial' computation of a number _x_ that we get from some _i
 var x = input()
 var r = loop (r = 1, x)
   if (x > 0)
-    next (r * x, x - 1)
+    next! (r * x, x - 1)
   else
-    give r
+    give! r
 console.log('The factorial of ' + x + ' is ' + r)
 ```
 
 A _loop_ expression has two arguments:
 - a tuple of assignable expressions (with optional initializers), and
 - one expression which is the loop body.
-Just like a _do_, it can be terminated with a _give_ statement which provides the result of the _loop_ expression.
-However it also allows the use of a _next_ statement, which:
+Just like a _do_, it can be terminated with a _give!_ statement which provides the result of the _loop_ expression.
+However it also allows the use of a _next!_ statement, which:
 - needs a tuple of values, of the same length of the _loop_ tuple,
 - provides one new value for each element of the _loop_ tuple, and
 - jumps to the beginning of the loop.
-This final 'jump' performed by _next_ is what makes _loop_ work like a tail recursive function, and the _loop_ tuple acts like the arguments of this imaginary function.
-The _next_ and _give_ keywords are one of the few Metascript constructs that are not expressions: they cannot "provide a value" because they are like jump statements.
+This final 'jump' performed by _next!_ is what makes _loop_ work like a tail recursive function, and the _loop_ tuple acts like the arguments of this imaginary function.
+The _next!_ and _give!_ keywords are one of the few Metascript constructs that are not expressions: they cannot "provide a value" because they are like jump statements.
 
 _TODO_ Explain better why I choose this as the only looping primitive and how every other loop construct can be implemented as a macro (and there will be a standard library of such macros).
 Note that there are already examples of these macros in the tests.
@@ -480,7 +480,7 @@ meta
         else
           \<- this[member]
       code.replaceTag('member', member)
-      give code
+      give! code
 ```
 
 This macro could be used in the following way:
@@ -542,13 +542,13 @@ meta
     expand: do
       var code = \<- loop ()
         if (!(condition))
-          end
+          end!
         else
           body
-          next ()
+          next! ()
       code.replaceTag('condition', expr.argAt(0))
       code.replaceTag('body', expr.argAt(1))
-      give code
+      give! code
 ```
 
 After this macro we can write something like this:
@@ -586,16 +586,16 @@ meta
   macro "while"
     precedence: LOW
     arity: binaryKeyword
-    expand: do give
+    expand: do give!
       {
         condition: expr.argAt(0)
         body: expr.argAt(1)
       } \<-> loop ()
         if (!(condition))
-          end
+          end!
         else
           body
-          next ()
+          next! ()
 ```
 
 which is more concise and readable.
@@ -609,13 +609,13 @@ meta
   macro "while"
     precedence: LOW
     arity: binaryKeyword
-    expand: do give \<-
+    expand: do give! \<-
       loop ()
         if (! \-> expr.argAt(0))
-          end
+          end!
         else
           \-> expr.argAt(1)
-          next ()
+          next! ()
 ```
 
 Another useful Metascript feature is the ability of producing variables with unique names when expanding macros, without forcing the programmer to explicitly call "gensym"-like functions (for those that know Lisp and Scheme, this means that Metascript makes it easy to write [hygienic macros](http://en.wikipedia.org/wiki/Hygienic_macro)).
