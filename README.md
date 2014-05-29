@@ -9,6 +9,8 @@ Another goal is to have a type system, for optionally performing static type che
 Project Status
 --------------
 
+[![Build Status](https://travis-ci.org/massimiliano-mantione/metascript.svg?branch=master)](https://travis-ci.org/massimiliano-mantione/metascript)
+
 There a library (npm module) implementing the compiler, with a script to invoke it on from the command line (as 'mjs <input.mjs>').
 Everything described below already works, and the compiler generates source maps by default.
 
