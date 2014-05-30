@@ -59,6 +59,6 @@ describe
     var path = __dirname + '/functional/'
     fs.readdirSync(path).forEach #->
       var fpath = path + #it
-      it(#it, #->
+      it(#it.substr(0, #it.length - 4), #->
         compileAndAssert fpath
       )
