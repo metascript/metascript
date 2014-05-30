@@ -737,3 +737,16 @@ it 'Has a proper \"@\" operator'
   ((obj.m4 'a') + (obj.m4 'b')).should.equal 3
   (obj.m5()['a'] + obj.m5()['b']).should.equal 3
 SKIPME
+
+it 'Can parse regexp'
+  var re = /bar/
+  re.test('foobarbaz').should.be.ok
+
+  /http:\/\//.test('http://google.com').should.be.ok
+  /foo/i.test('FOO').should.be.ok
+  /f([o])o/.test('foo').should.be.ok
+
+it 'Can parse forward slashes'
+  (10 / 5).should.equal 2
+  (100 / 10 / 2).should.equal 5
+
