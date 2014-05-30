@@ -22,7 +22,7 @@
   },
   "scripts": {
     "prepublish": "node ./lib/build-macros.js",
-    "pretest": "node ./lib/build-macros.js",
+    "pretest": "node ./lib/build-macros.js && node ./test/build-tests.js",
     "test": "mocha"
   },
   "jshintConfig": {
