@@ -29,6 +29,9 @@
     "pretest": "node ./lib/build-macros.js",
     "test": "mocha"
   },
+  "mjsConfig": {
+    "mapEmbed": true
+  },
   "jshintConfig": {
     "globals": {},
     "browser": false,
