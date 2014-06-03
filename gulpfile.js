@@ -14,6 +14,7 @@ var files = {
     './lib/core-macros.mjs'
   ],
   'test': [
+    'test/node_modules/test-metaimport/*.mjs',
     'test/*.mjs'
   ]
 };

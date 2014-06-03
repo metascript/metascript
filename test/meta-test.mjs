@@ -606,6 +606,9 @@ it 'Can import macro modules'
   obj.m1().should.equal 3
   obj.m2('a', 'aa').should.equal 42
 
+it 'Can import npm macro modules'
+  #metaimport 'test-metaimport'
+  (3kg).should.equal 3000
 
 it 'Has a threading operator'
   var obj = {
