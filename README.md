@@ -23,7 +23,7 @@ Otherwise, if you only want to try the compiler, just do "npm install meta-scrip
 
 There is [Gulp](http://gulpjs.com/) integration [here](http://github.com/bamboo/gulp-mjs), and a [Lighttable](http://www.lighttable.com/) plugin [here](http://github.com/bamboo/MightTable), thanks to [Bamboo](http://bamboo.github.io/).
 
-There is a Google group (metascript@googlegroups.com), it is still empty but discussion about Metascript is supposed to happen there.
+There is a Google group (metascript@googlegroups.com), discussion about Metascript is supposed to happen there.
 
 Have a look at the TODO list at the end to see what's coming next.
 
@@ -62,22 +62,24 @@ f(6).should.equal(6 * 5 * 4 * 3 * 2)
 Metascript supports real macros! Here is how we could define an '@' operator that behaves like the Coffeescript one:
 
 ```
-meta
-  macro "@"
-    predecence: KEY
-    expand: do
-      var code = \<- this.arg
-      code.replaceTag('arg', expr.argAt(0))
-      give! code
+#defmacro @
+  arity: unary
+  precedence: HIGH
+  expand: (arg) ->
+    `this . ~`arg
+
 var obj = {
   a: 1
   b: 2
   m: () -> (@a + @b)
 }
+
 obj.m().should.equal(3)
 ```
 
-More generally, the core Metascript language is relatively small and every advanced construct can be implemented with macros.
+In the above code '`' is the *quote* operator, and '~`' is the *unquote* one.
+
+More generally, the core Metascript language is relatively small and every advanced construct can be implemented with macros (about metaprogramming, the only primitive is a very basic '#quote' operator, everything else is done with macros, including ` and ~`).
 
 
 Motivation
@@ -367,14 +369,19 @@ cube = (x) ->
   square(x) * x
 ```
 
-About data flow analysis, the body of a function definition is handled as following:
-- if it is:
-    - a _do_ expression,
-    - an non empty tuple, or
-    - a _return_ expression
-  it is assumed to provide no return value, otherwise
-- the compiler will produce a return statement and will assume that the body expression must produce exactly one value, which will be returned by the function.
-This way the programmer can always write very concise code but the compiler will anyway be able to perform data flow analysis with no ambiguities.
+About data flow analysis, in Metascript the assumption is that a function body is an expression that produces exactly one value (it is like a tuple of arity one), which is then returned by the function.
+The only exception to this is if the body is a return statement (which is handled in the obvious way).
+
+To clarify, all the following functions return the same value (even if the 3rd causes a side effect before returning it):
+
+```
+var f1 = () -> 42
+var f2 = () -> return 42
+var f3 = () ->
+  console.log 'I am returning the answer'
+  42
+```
+
 
 ### _TODO:_ switch, case
 
@@ -471,18 +478,23 @@ Metascript supports metaprogramming allowing the developer to write macros that 
 Let's see, as an initial example, how to define an operator that, like Coffescript's _@_, translates into "_this._" in the final program:
 
 ```
-meta
-  macro '@'
-    precedence: KEY
-    expand: do
-      var member = expr.argAt(0)
-      var code =
-        if (member.isTag())
-          \<- this.member
-        else
-          \<- this[member]
-      code.replaceTag('member', member)
-      give! code
+#defmacro @
+  arity: unary
+  precedence: HIGH
+  expand: (member) ->
+    if (member.tag?())
+      `this . ~`member
+    else if (member.array?())
+      if (member.count == 1)
+       `this [~`member.at 0]
+      else if (member.count == 0)
+        `this
+      else do
+        member.error 'Only one member selector is allowed'
+        null
+    else do
+      member.error 'Invalid object member'
+      null
 ```
 
 This macro could be used in the following way:
@@ -492,65 +504,65 @@ var obj = {
   b: 2
   aaa: 42
   m1: () -> (@a + @b)
-  m2: (x, y) -> @(x + y)
+  m2: (x, y) -> @[x + y]
+  me: () -> @[]
 }
 obj.m1().should.equal(3)
 obj.m2('a', 'aa').should.equal(42)
+obj.me()['aaa'].should.equal(42)
 ```
 
-In Metascript the _meta_ keyword introduces metaprogramming statements.
-The _macro_ statement defines a new macro, and it must be followed by the string that represents the new operator (or keyword), in this case _@_.
-Then a few properties must be specified, with a syntax like the one used in properties in object literals:
+In Metascript the #defmacro keyword defines a new macro, and it must be followed by the symbol that is being defined and by a tuple of properties with a syntax like the one used in properties in object literals:
 - _arity_ to specify the number of arguments of the operator, it defaults to 'unary', other useful values are 'binary', 'optional' (for as keyword that might or might not have an operand), 'zero', or others that will be documented later.
 - _precedence_ defines the operator precedence (_TODO_: document the precedence table), defaults to 'KEY'.
 - _dependsFrom_ is for keywords that must work together with others to build more complex constructs (like _catch_ is related to _try_, or _else_ is related to _if_).
 - _expand_ is the only mandatory property, it provides the code that implements the macro.
 
-The macro implementation has two variables in its scope:
-- _expr_ is the root of the AST tree where the macro must be expanded (in the above example _expr_ will be _@a_, _@b_ and then _@(x + y)_).
+Technically the macro implementation has two variables in its scope:
+- _ast_ is the root of the AST tree where the macro must be expanded (in the above example _ast_ will be _@a_, _@b_ and then _@[x + y]_).
 - _meta_ is an object that represents the compilation environment (still undocumented, will be useful in complex code generation scenarios, and can be ignored for now).
 
+However the #defmacro construct simplifies this, and allows the programmer to declare arguments to the _expand_ function, which will have the value of the AST children of the _ast_ argument.
+
 In the above example the macro does the following (remember that it runs at _compile_ time, at every use of the defined symbol in the source code):
-- it extracts the argument passed to the _@_ operator (with _expr.argAt(0)_)
+- it extracts the argument passed to the _@_ operator and assigns it to _member_
 - it checks if it is a "tag" (which means an identifier) or not
+
 Now we must explain what _code quoting_ is.
-In Metascript the _\\->_ operator is the _quote_ operator for parse trees, it is the one that provides the macros new peices of code to put into the final program.
-In the above example we have two such snippets of code:
-- _this.member_, which makes sense if _member_ is a tag, and
-- _this[member]_, which must be used otherwise.
-The macro code selects the correct code snippet and assigns it to the _code_ variable.
-Now in the macro code we have assigned two variables:
-- _member_, with the _@_ operand, and
-- _code_, with the code we want to put in the program instead of the _@_ operator.
-By invoking _code.replaceTag('member', member)_ we replace _member_ (the _@_ operand) with "member" in the code snippet. After that, the code snippet is exactly what we want, and it can be returned.
+In Metascript the _`_ operator is the _quote_ operator for parse trees, it is the one that provides the macros new pieces of code to put into the final program.
+In the above example we have three such snippets of code:
+- _this.member_, which makes sense if _member_ is a tag,
+- _this[member]_, which must be used otherwise, or
+_ _this_ if there is no member.
+
+Then we should introduce the _unquote_ operator: it allows the programmer to put the result of an expression inside quoted code.
+Note that the expression must produce a valid AST!
+
+The macro code selects the correct code snippet and returns it.
 
 The Metascript compiler will then replace the _@_ occurrence with the code returned by the _expand_ function in the macro definition.
-This will make the two method definitions look like this:
+This will make the method definitions look like this:
 
 ```
   m1: () -> (this.a + this.b)
   m2: (x, y) -> this[x + y]
+  me: () -> this
 ```
 
 Of course this is a very simple macro.
 More complex ones can accomplish more useful tasks.
-For instance if we wanted to have a _while_ statement in Metascript. the following macro implements it easily:
+For instance in the core macros there is a _while_ statement, implemented like this:
 
 ```
-meta
-  macro "while"
-    precedence: LOW
-    arity: binaryKeyword
-    expand: do
-      var code = \<- loop ()
-        if (!(condition))
-          end!
-        else
-          body
-          next! ()
-      code.replaceTag('condition', expr.argAt(0))
-      code.replaceTag('body', expr.argAt(1))
-      give! code
+#keepmacro while
+  arity: binaryKeyword
+  precedence: LOW
+  expand: (condition, body) ->
+    ` loop ()
+      if (~` condition) do
+        do
+          ~` body
+        next! ()
 ```
 
 After this macro we can write something like this:
@@ -565,60 +577,8 @@ r.should.equal '123'
 
 and of course the test would pass.
 
-How the macro works should be obvious: _code_ contains the "skeleton" of the code we want to emit, then we replace _condition_ and _body_ with the _while_ expression arguments and we return the resulting piece of code.
+How the macro works should be obvious: _expand_ returns the "skeleton" of the code we want to emit, with _condition_ and _body_ inserted in the proper places (using the _unquote_ operator).
 
-
-
-Another useful macro that can be written is a "quote code and replace tags", very useful in writing macros!
-It can be found in the tests, anyway it works like this:
-
-```
-{
-  tag1: replacement1
-  tag2: replacement2
-  ...
-} \<-> quotedCode
-```
-
-So, the _\\<->_ operator takes an object literal and a piece of code, and it repeatedly invokes _replaceTag_ on the code, once for every property of the object literal.
-With this operator the _while_ macro can be written in the following way:
-
-```
-meta
-  macro "while"
-    precedence: LOW
-    arity: binaryKeyword
-    expand: do give!
-      {
-        condition: expr.argAt(0)
-        body: expr.argAt(1)
-      } \<-> loop ()
-        if (!(condition))
-          end!
-        else
-          body
-          next! ()
-```
-
-which is more concise and readable.
-
-Then I should write an _unquote_ macro, which should be used inside quoted code to insert pieces of code that will provide a local replacement (like an "inline macro").
-Since it is the opposite of "quoting" I would give the macro the _\\->_ symbol.
-With that macro the _while_ definition would become the following:
-
-```
-meta
-  macro "while"
-    precedence: LOW
-    arity: binaryKeyword
-    expand: do give! \<-
-      loop ()
-        if (! \-> expr.argAt(0))
-          end!
-        else
-          \-> expr.argAt(1)
-          next! ()
-```
 
 Another useful Metascript feature is the ability of producing variables with unique names when expanding macros, without forcing the programmer to explicitly call "gensym"-like functions (for those that know Lisp and Scheme, this means that Metascript makes it easy to write [hygienic macros](http://en.wikipedia.org/wiki/Hygienic_macro)).
 To make use of the feature the programmer needs to use the _\\_ operator before identifiers that must be made unique, like this:
@@ -647,18 +607,13 @@ TODO List
     - the generated javascript code
     - the arity of the expression as inferred by the compiler
   - it would be nice to have a mode where the editor automatically selects the current expression (AST subtree) at the cursor location, and changes it following the cursor movement
-  - integrate the plugin with the nodejs and browser REPL clients so that also Metascript will have a REPL
   - maybe implement a ternjs-like code analysis to have member autocompletion
-- Write more useful macros
-    - looping ones
+- Document the AST API that can be used inside macros and the existing core macros, especially the ones that implement the meta-module system (libraries of macros).
+- Document the [Masakari](https://github.com/bamboo/masakari) library of macros.
+- Add more macros, like
     - generators
-    - array comprehension
-    - destructuring assignments and structure matchers
-    - switch
     - small useful operators
     - 'double arrow' functions
 - Implement the trick about string interpolation
-- Settle on an API for a module system for macros (meta-modules!)
-- Document the AST API that can be used inside macros.
 - Implement the type system, and expand the lighttable plugin to provide type-assisted autocompletion.
 - Finish this TODO list :-)
