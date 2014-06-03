@@ -14,7 +14,11 @@
   "dependencies": {
     "escodegen": ">=0.0.28",
     "require-like": "^0.1.2",
-    "source-map-support": "*"
+    "source-map-support": "*",
+    "minimist": "0.1.0",
+    "colors": "0.6.2",
+    "parentpath": "0.2.0",
+    "pretty-hrtime": "0.2.1"
   },
   "devDependencies": {
     "mocha": "*",
@@ -24,6 +28,9 @@
     "prepublish": "node ./lib/build-macros.js",
     "pretest": "node ./lib/build-macros.js && node ./test/build-tests.js",
     "test": "mocha"
+  },
+  "mjsConfig": {
+    "mapEmbed": true
   },
   "jshintConfig": {
     "globals": {},

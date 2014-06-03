@@ -2,6 +2,5 @@
 
 var path = require('path');
 var fs   = require('fs');
-var lib  = path.join(path.dirname(fs.realpathSync(__filename)), '../lib');
 
-require(lib + '/mjs.js')();
+require('../lib/mjs.js')(process.argv);
