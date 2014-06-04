@@ -2,7 +2,3 @@ node_modules/
 test/functional-test.js*
 test/meta-module.js*
 test/meta-test.js*
-*.txt
-*.js
-*.mjs
-*.map
