@@ -1,5 +1,3 @@
-node_modules/
-lib/core-macros.js*
 test/functional-test.js*
 test/meta-module.js*
 test/meta-test.js*
