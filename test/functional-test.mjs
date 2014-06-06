@@ -20,17 +20,17 @@ var compileAndAssert = (fname) ->
   ; Extract options from modeline
   if (code.substring(0, 6) == '; mjs:') do
     var line = code.substr(6, code.indexOf '\n')
-    var modearg = new RegExp('\\s*([\\w\\d]+)(\\s*=\\s*[\\w\\d]+)?\\s*,?', 'g')
+    var modearg = new RegExp('\\s*([\\w\\d]+)(\\s*=\\s*([\\w\\d]+))?\\s*,?', 'g')
     line.replace
       modearg
-      (m0, m1, m2) ->
-        if (m2 == undefined || m2 == 'true' || m2 == 'on' || m2 == 'yes')
-          m2 = true
+      (m0, m1, m2, m3) ->
+        if (m3 == undefined || m3 == 'true' || m3 == 'on' || m3 == 'yes')
+          m3 = true
         else
-          if (m2 == 'false' || m2 == 'off' || m2 == 'no') do
-            m2 = false
+          if (m3 == 'false' || m3 == 'off' || m3 == 'no') do
+            m3 = false
 
-        compiler.options[m1] = m2
+        compiler.options[m1] = m3
 
   ; Register our mocked print function in the compiler scope
   ; HACK: varRootScope is initialized but never used :-s
