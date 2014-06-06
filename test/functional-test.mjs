@@ -64,6 +64,8 @@ var compileAndAssert = (fname) ->
     if process.env.VERBOSE do
       console.log('')
       console.log(fname + '\n' + (new Array(fname.length)).join('=') + '=\n')
+      console.log(compiler.root.printAst())
+      console.log('')
       console.log(result.code)
     throw e
 
