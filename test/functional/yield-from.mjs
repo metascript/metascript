@@ -7,15 +7,6 @@ start
 stop
 '''
 
-#defmacro 'yield-from'
-  unary
-  KEY
-  expand: (arg) ->
-    var code = ` yield ~`arg
-    code.set('delegate', true)
-    code
-
-
 var inner = #->
   yield 1
   yield 2
@@ -23,7 +14,7 @@ var inner = #->
 
 var outer = #->
   yield 'start'
-  yield-from inner()
+  yield from inner()
   yield 'stop'
 
 
