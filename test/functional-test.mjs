@@ -1,15 +1,23 @@
 #external
   __dirname
   process
+  global
   describe
   it
-
 
 
 var fs = require 'fs'
 var vm = require 'vm'
 var Meta = require('../')();
 require 'should'
+
+var mocked-console = {
+  output: []
+  log: (ln) -> this.output.push ln
+  reset: () ->
+    this.output = []
+}
+global.mocked-console = mocked-console
 
 
 var compileAndAssert = (fname) ->
@@ -50,16 +58,13 @@ var compileAndAssert = (fname) ->
 
   var result = compiler.generate ast
 
-  var output = []
-  var sandbox = {
-    console: {
-      log: (line) -> output.push(line)
-    }
-  }
-
+  mocked-console.reset()
   try do
-    vm.runInNewContext(result.code, sandbox, fname)
-    expected.should.equal( output.join('\n') )
+    vm.runInThisContext
+      '(function (console) {' + result.code + '\n})(mockedConsole)'
+      fname
+
+    expected.should.equal( mocked-console.output.join('\n') )
   catch (var e) do
     if process.env.VERBOSE do
       console.log('')
@@ -70,7 +75,6 @@ var compileAndAssert = (fname) ->
     throw e
 
 
-
 describe
   'functional'
   #->
@@ -79,6 +83,6 @@ describe
       if (#it.substr(-4) != '.mjs') return
       
       var fpath = path + #it
-      it(#it.substr(-4), #->
+      it(#it.substr(0, #it.length - 4), #->
         compileAndAssert fpath
       )
