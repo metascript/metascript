@@ -76,9 +76,9 @@ describe
   #->
     var path = __dirname + '/functional/'
     fs.readdirSync(path).forEach #->
-      if (#it.substr(#it.length-4) == '.mjs') return
+      if (#it.substr(-4) != '.mjs') return
       
       var fpath = path + #it
-      it(#it.substr(0, #it.length - 4), #->
+      it(#it.substr(-4), #->
         compileAndAssert fpath
       )
