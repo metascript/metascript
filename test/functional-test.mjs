@@ -7,6 +7,7 @@
 
 
 var fs = require 'fs'
+var path = require 'path'
 var vm = require 'vm'
 var Meta = require('../')();
 require 'should'
@@ -36,6 +37,8 @@ var compileAndAssert = (fname) ->
 
   var output = []
   var sandbox = {
+    __dirname: path.dirname(fname)
+    __filename: path.basename(fname)
     console: {
       log: (line) -> output.push(line)
     }
@@ -56,9 +59,9 @@ var compileAndAssert = (fname) ->
 describe
   'functional'
   #->
-    var path = __dirname + '/functional/'
-    fs.readdirSync(path).forEach #->
-      var fpath = path + #it
+    var dir = __dirname + '/functional/'
+    fs.readdirSync(dir).forEach #->
+      var fpath = dir + #it
       it(#it.substr(0, #it.length - 4), #->
         compileAndAssert fpath
       )
