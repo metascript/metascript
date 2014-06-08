@@ -1,5 +1,5 @@
 '''
-external-expression.mjs
+function
 '''
 
-console.log(#external __filename)
+console.log(typeof (#external global).String)

@@ -1,7 +1,7 @@
 '''
-EXTERNAL-ASSIGNMENT.MJS
+10
 '''
 
-var upper = (#external __filename).toUpperCase()
+var arr = (#external global.Array)(10)
 
-console.log upper
+console.log(arr.length)

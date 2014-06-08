@@ -1,7 +1,7 @@
 '''
-external-statement.mjs
+true
 '''
 
-#external __filename
+#external global
 
-console.log(__filename)
+console.log(global.Array == Array)
