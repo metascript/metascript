@@ -598,7 +598,7 @@ describe('Meta.Compiler', function () {
         {
           line: 3,
           column: 4,
-          message: 'should produce a simple value'
+          message: 'should produce a single value'
         }
       ]);
 

@@ -18,14 +18,15 @@
     "minimist": "0.1.0",
     "colors": "0.6.2",
     "parentpath": "0.2.0",
-    "pretty-hrtime": "0.2.1"
+    "pretty-hrtime": "0.2.1",
+    "regenerator": "0.4.8"
   },
   "devDependencies": {
     "mocha": "*",
     "should": "~2.0.2"
   },
   "scripts": {
-    "prepublish": "node ./lib/build-macros.js",
+    "prepublish": "node ./lib/build-macros.js && node ./lib/build-regenerator-runtime.js",
     "pretest": "node ./lib/build-macros.js && node ./test/build-tests.js",
     "test": "mocha"
   },
