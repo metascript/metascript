@@ -59,6 +59,7 @@ var compileAndAssert = (fname) ->
   var result = compiler.generate ast
 
   mocked-console.reset()
+
   try do
     vm.runInThisContext
       '(function (console) {' + result.code + '\n})(mockedConsole)'
