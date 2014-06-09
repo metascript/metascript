@@ -2,9 +2,9 @@
 foo
 '''
 
-var foo = 'foo'
+this.foo-property = 'foo'
 
 var fn = () =>
-  this.foo
+  this.foo-property
 
 console.log(fn())

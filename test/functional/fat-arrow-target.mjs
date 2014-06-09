@@ -2,11 +2,11 @@
 global
 '''
 
-var id = 'global'
-var fn = () => this.id
+this.property = 'global'
+var fn = () => this.property
 
 var obj1 = {
-  id: 'obj1'
+  property: 'obj1'
   fn: fn
 }
 
