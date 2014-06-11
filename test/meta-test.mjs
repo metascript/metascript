@@ -719,6 +719,29 @@ it 'Can parse empty lambdas'
   var empty = #->
   (empty() == undefined).should.equal true
 
+it 'Has a working pre-expand'
+  #defmacro #dummy
+    arity: unary
+    precedence: LOW
+    expand: #-> `done-dummy
+  #defmacro check-pre-expand
+    arity: unary
+    precedence: LOW
+    pre-expand: (arg) ->
+      if (arg.id == '#dummy') do
+        arg.replace-with(`replaced)
+        undefined
+      else
+        ` 'dummy expanded'
+    expand: (arg) ->
+      if (arg.tag?() && arg.getTag() == 'replaced')
+        ` 'ok'
+      else
+        ` 'not replaced'
+  var r = check-pre-expand #dummy
+  r.should.equal 'ok'
+
+
 '''SKIPME
 it 'Has a proper \"@\" operator'
   var obj = {
