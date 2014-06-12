@@ -575,6 +575,41 @@ describe('Meta.Compiler', function () {
     });
   });
 
+  describe('#combine() - implicit', function () {
+    var fixtures = {
+      'a b'         : 'a(b)',
+      'a(b)'        : 'a(b)',
+      'a.b c'       : '(a.b)(c)',
+      'a.b(c)'      : '(a.b)(c)',
+      'a.b c.d'     : '(a.b)(c.d)',
+      'a[b] c.d'    : '(a[b])(c.d)',
+      'a b c d'     : 'a(b(c(d)))',
+      'a.b(c).d'    : '((a.b)(c)).d',
+      'a(b)()'      : '(a(b))()',
+      '(a b)()'     : '(a(b))()',
+      'new a b'     : 'new a(b)',
+      'new a(b)'    : 'new a(b)',
+      'new a b()'   : 'new a(b())',
+      'new a() b'   : 'new (a()(b))',
+      '(new a()) b' : '(new a())(b)',
+      'a = b c'     : 'a = (b(c))',
+      'if a b c'    : 'if a (b(c))',
+      'a b + c d'   : '(a(b)) + (c(d))',
+      'a b + c.d'   : '(a(b)) + (c.d)',
+      '(a).(b c)'   : '(a).(b(c))',
+      'a(b c)(d)'   : 'a(b(c))(d)',
+    };
+
+    Object.keys(fixtures).forEach(function (code) {
+      it('`' + code + '` <=> `' + fixtures[code] + '`', function () {
+        var actual = combineArray([code]).root.toExpressionString();
+        var expected = combineArray([fixtures[code]]).root.toExpressionString();
+        expected.should.equal(actual);
+      });
+    });
+
+  });
+
   describe('#checkArity()', function () {
     it('Should detect arity errors', function () {
       compareArrayToExpressionString(combineArray([
