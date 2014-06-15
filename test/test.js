@@ -98,19 +98,19 @@ describe('Meta.Compiler', function () {
       ]), '(b (l id:"print" val:"\n\t" val:"xy\uaBcDz" val:""))');
 
       compareArrayToTokenDump(parseArray([
-        'print """END\n1\n2\n3\nEND\nok'
-      ]), '(b (l id:"print" val:"123") (l id:"ok"))');
+        'print """\n 1 \n 2   \n 3 \n"""\nok'
+      ]), '(b (l id:"print" val:"1 2 3") (l id:"ok"))');
 
       compareArrayToTokenDump(parseArray([
-        'print """\n1\n2\n3\n"""\nok'
-      ]), '(b (l id:"print" val:"123") (l id:"ok"))');
-
-      compareArrayToTokenDump(parseArray([
-        'print \'\'\'END\n1\n2\n3\nEND\nok'
-      ]), '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
+        'print """\n1  2  3   \n"""\nok'
+      ]), '(b (l id:"print" val:"1  2  3") (l id:"ok"))');
 
       compareArrayToTokenDump(parseArray([
         'print \'\'\'\n1\n2\n3\n\'\'\'\nok'
+      ]), '(b (l id:"print" val:"1\n2\n3") (l id:"ok"))');
+
+      compareArrayToTokenDump(parseArray([
+        'print \'\'\'\n1\n2\n3\n\n\'\'\'\nok'
       ]), '(b (l id:"print" val:"1\n2\n3\n") (l id:"ok"))');
     });
 
@@ -213,9 +213,9 @@ describe('Meta.Compiler', function () {
         '1\n2\n3',
         '"""',
         '    l3a',
-        '"""END',
+        '"""""',
         '1\n2\n3',
-        'END',
+        '"""""',
         '    l3b',
         'l1b'
       ]), '(b (l id:"l1a" (b (l id:"l2a" (b (l id:"l3a") ' +

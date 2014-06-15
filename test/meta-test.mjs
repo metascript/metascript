@@ -742,7 +742,7 @@ it 'Has a working pre-expand'
   r.should.equal 'ok'
 
 
-'''SKIPME
+'''
 it 'Has a proper \"@\" operator'
   var obj = {
     a: 1
@@ -759,4 +759,4 @@ it 'Has a proper \"@\" operator'
   obj.m3('a', 'aa').should.equal 42
   ((obj.m4 'a') + (obj.m4 'b')).should.equal 3
   (obj.m5()['a'] + obj.m5()['b']).should.equal 3
-SKIPME
+'''
