@@ -3,4 +3,37 @@
 var path = require('path');
 var fs   = require('fs');
 
-require('../lib/mjs.js')(process.argv);
+function subcommand(command, argv) {
+  var pkg = 'mjs-' + command;
+  var command;
+  try {
+    command = require(pkg + '/mjs');
+  } catch (e) {
+    console.error('Package "' + pkg + '" not found or is not a subcommand');
+    return 1;
+  }
+  if (typeof command !== 'function') {
+    console.error('Module "' + pkg + '/mjs" must export a function');
+    return 1;
+  }
+
+  var exitcode;
+  try {
+     exitcode = command(argv);
+  } catch (e) {
+    console.error('Command "' + pkg + '" failed: ' + e);
+    exitcode = 1;
+  }
+  return typeof exitcode === 'number' ? exitcode : 1; 
+}
+
+
+var argv = process.argv.slice(2);
+// Detect sub commands
+if (argv.length >= 1 && /^\w[\w\d-]*$/.test(argv[0])) {
+  var exitcode = subcommand(argv[0], argv.slice(1));
+  process.exit(exitcode);
+} else {
+  // TODO: Prefer loading local package if available
+  require('../lib/mjs')(argv);
+}
