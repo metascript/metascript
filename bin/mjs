@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
+// Prefer a local package installation based on the CWD
+var requireCwd = require('require-like')(process.cwd());
+
 
 function subcommand(command, argv) {
   var pkg = 'mjs-' + command;
   var command;
   try {
-    command = require(pkg + '/mjs');
+    command = requireCwd(pkg + '/mjs');
   } catch (e) {
     console.error('Package "' + pkg + '" not found or is not a subcommand');
     return 1;
@@ -29,10 +32,7 @@ function subcommand(command, argv) {
 function mjs(argv) {
   var mjs;
   try {
-    // Prefer a local package installation based on the CWD
-    var requireCwd = require('require-like')(process.cwd());
     mjs = requireCwd('meta-script/lib/mjs');
-
     // Backwards compatibility
     var pkg = requireCwd('meta-script/package.json');
     if (pkg.version === '0.0.35') {
