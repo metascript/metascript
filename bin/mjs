@@ -32,18 +32,18 @@ function subcommand(command, argv) {
 function mjs(argv) {
   var mjs;
   try {
-    mjs = requireCwd('meta-script/lib/mjs');
-
     // Ignore local installation if we are working on a compiler checkout
     var rootDir = require('parentpath').sync('package.json');
     if (rootDir && requireCwd(rootDir + '/package.json').name === 'meta-script') {
-      throw new Error('Working on the compiler, using the checkout version');
-    }
+      mjs = requireCwd(rootDir + '/lib/mjs');
+    } else {
+      mjs = requireCwd('meta-script/lib/mjs');
 
-    // Backwards compatibility
-    var pkg = requireCwd('meta-script/package.json');
-    if (pkg.version < '0.0.39') {
-      argv = process.argv;
+      // Backwards compatibility
+      var pkg = requireCwd('meta-script/package.json');
+      if (pkg.version < '0.0.39') {
+        argv = process.argv;
+      }
     }
   } catch (e) {
     mjs = require('../lib/mjs');
