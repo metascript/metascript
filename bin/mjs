@@ -1,35 +1,37 @@
-#!/usr/bin/env node
+#!/bin/sh
+":" //# hack to run node with args; exec node --expose-gc "$0" "$@"
+
 
 // Prefer a local package installation based on the CWD
 var requireCwd = require('require-like')(process.cwd() + '/.');
 
 
-function subcommand(command, argv) {
+function subcommand(command, argv, done) {
   var pkg = 'mjs-' + command;
   var command;
   try {
     command = requireCwd(pkg + '/mjs');
   } catch (e) {
     console.error('Package "' + pkg + '" not found or is not a subcommand');
-    return 1;
+    done(1);
+    return;
   }
   if (typeof command !== 'function') {
     console.error('Module "' + pkg + '/mjs" must export a function');
-    return 1;
+    done(1);
+    return;
   }
 
-  var exitcode;
   try {
-     exitcode = command(argv);
+    command(argv, done);
   } catch (e) {
     console.error('Command "' + pkg + '" failed: ' + e);
-    exitcode = 1;
+    done(1);
   }
-  return typeof exitcode === 'number' ? exitcode : 1;
 }
 
 
-function mjs(argv) {
+function mjs(argv, done) {
   var mjs;
   try {
     mjs = requireCwd('meta-script/lib/mjs');
@@ -49,18 +51,19 @@ function mjs(argv) {
     mjs = require('../lib/mjs');
   }
 
-  return mjs(argv)
+  return mjs(argv, done)
 }
 
+function done(exitcode) {
+  process.exit(exitcode);
+}
 
 var exitcode;
 var argv = process.argv.slice(2);
 
 // Detect sub commands
 if (argv.length >= 1 && /^\w[\w\d-]*$/.test(argv[0])) {
-  exitcode = subcommand(argv[0], argv.slice(1));
+  subcommand(argv[0], argv.slice(1), done);
 } else {
-  exitcode = mjs(argv);
+  mjs(argv, done);
 }
-
-process.exit(exitcode);
