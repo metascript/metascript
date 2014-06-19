@@ -3,7 +3,7 @@
 
 
 // Prefer a local package installation based on the CWD
-var requireCwd = require('require-like')(process.cwd());
+var requireCwd = require('require-like')(process.cwd() + '/.');
 
 
 function subcommand(command, argv, done) {
@@ -35,11 +35,16 @@ function mjs(argv, done) {
   var mjs;
   try {
     mjs = requireCwd('meta-script/lib/mjs');
+
+    // Ignore local installation if we are working on a compiler checkout
+    var rootDir = require('parentpath').sync('package.json');
+    if (rootDir && requireCwd(rootDir + '/package.json').name === 'meta-script') {
+      throw new Error('Working on the compiler, using the checkout version');
+    }
+
     // Backwards compatibility
     var pkg = requireCwd('meta-script/package.json');
-    if (pkg.version === '0.0.35') {
-      throw new Error('This version is used for bootstrapping!');
-    } else if (pkg.version < '0.0.40') {
+    if (pkg.version < '0.0.39') {
       argv = process.argv;
     }
   } catch (e) {
