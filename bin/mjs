@@ -1,4 +1,6 @@
-#!/usr/bin/env node --expose-gc 
+#!/bin/sh
+":" //# hack to run node with args; exec node --expose-gc "$0" "$@"
+
 
 // Prefer a local package installation based on the CWD
 var requireCwd = require('require-like')(process.cwd());
