@@ -8,7 +8,7 @@ var argv = require('minimist')(process.argv.slice(2));
 // List of meta-script files to be compiled
 var files = {
   'compiler': [
-    'NOTHING YET'
+    './lib/compiler/*.mjs'
   ],
   'coremacros': [
     './lib/core-macros.mjs'
@@ -32,17 +32,18 @@ gulp.task('default', function (done) {
   return gulp.start('build');
 });
 
-gulp.task('coremacros', function () {
-  return gulp.src(files.coremacros)
+gulp.task('compiler', function () {
+  // Uses the bootstrapping compiler
+  return gulp.src(files.compiler)
   .pipe(cache('compiler'))
-  .pipe(exec('./bin/mjs -v --color --skip-core <%= file.path %>', execOpts))
+  .pipe(exec('./node_modules/.bin/mjs -v --color <%= file.path %>', execOpts))
   .pipe(exec.reporter())
 });
 
-gulp.task('compiler', function () {
-  return gulp.src(files.compiler)
+gulp.task('coremacros', ['compiler'], function () {
+  return gulp.src(files.coremacros)
   .pipe(cache('compiler'))
-  .pipe(exec('./bin/mjs -v --color <%= file.path %>', execOpts))
+  .pipe(exec('./bin/mjs -v --color --skip-core <%= file.path %>', execOpts))
   .pipe(exec.reporter())
 });
 

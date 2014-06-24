@@ -22,6 +22,8 @@
     "regenerator": "0.4.8"
   },
   "devDependencies": {
+    "meta-script": "// Use an older javascript-only version to bootstrap the compiler",
+    "meta-script": "=0.0.41",
     "gulp": "^3.8.1",
     "gulp-cached": "0.0.3",
     "gulp-exec": "^2.0.1",
