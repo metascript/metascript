@@ -22,13 +22,19 @@
     "regenerator": "0.4.8"
   },
   "devDependencies": {
+    "meta-script": "// Use an older javascript-only version to bootstrap the compiler",
+    "meta-script": "=0.0.41",
+    "gulp": "^3.8.1",
+    "gulp-cached": "0.0.3",
+    "gulp-exec": "^2.0.1",
+    "gulp-mocha": "^0.4.1",
+    "gulp-util": "^2.2.17",
     "mocha": "*",
     "should": "~2.0.2"
   },
   "scripts": {
-    "prepublish": "node ./lib/build-macros.js && node ./lib/build-regenerator-runtime.js",
-    "pretest": "node ./lib/build-macros.js && node ./test/build-tests.js",
-    "test": "mocha"
+    "prepublish": "./node_modules/.bin/gulp regenerator build",
+    "test": "./node_modules/.bin/gulp test --reporter spec"
   },
   "mjsConfig": {
     "mapEmbed": true

@@ -1,6 +1,7 @@
 node_modules/
 lib/core-macros.js*
 lib/regenerator-runtime.json
+lib/compiler/*.js*
 test/functional-test.js*
 test/meta-module.js*
 test/meta-test.js*
