@@ -1,6 +1,6 @@
 {
   "name": "meta-script",
-  "version": "0.0.41",
+  "version": "0.0.42",
   "author": "Massimiliano Mantione <massimiliano.mantione@gmail.com>",
   "description": "A language with a compiler that targets Javascript.",
   "repository": {
@@ -22,7 +22,6 @@
     "regenerator": "0.4.8"
   },
   "devDependencies": {
-    "meta-script": "// Use an older javascript-only version to bootstrap the compiler",
     "meta-script": "=0.0.41",
     "gulp": "^3.8.1",
     "gulp-cached": "0.0.3",
