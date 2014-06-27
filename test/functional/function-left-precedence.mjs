@@ -1,12 +1,13 @@
 '''
 42
 42
+42
+42
 '''
 
-var identity = it -> it
-var sum = (a, b) -> (a + b)
+var logger = f -> console.log f (42, 1)
 
-console.log
-  identity 42
-console.log
-  sum (21, 21)
+logger it -> it
+logger (a, b) -> (a * b)
+logger it => it
+logger (a, b) => (a * b)
