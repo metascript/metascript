@@ -606,6 +606,14 @@ it 'Can import macro modules'
   obj.m1().should.equal 3
   obj.m2('a', 'aa').should.equal 42
 
+it 'Can import multiple macro modules at once'
+  #metaimport
+    './meta-module'
+    './meta-module-2'
+
+  var obj = {a: 21}
+  obj.ltuae = () -> #d-double @%^a
+  obj.ltuae().should.equal 42
 
 it 'Has a threading operator'
   var obj = {
@@ -674,7 +682,7 @@ it 'Does not expand quoted code'
   x.should.equal 2
 
 it 'Can use imported macros in macros'
-  #metaimport './meta-module'
+  #metaimport './meta-module-2'
   #defmacro #q-quadruple
     unary
     HIGH
