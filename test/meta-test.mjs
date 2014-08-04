@@ -1,25 +1,21 @@
 require('source-map-support').install()
 
-#external
-  describe
-  it
-
 require 'should'
 
 #defmacro 'describe'
   binaryKeyword
   KEY
-  expand: (item, body) ->
-    `describe
-      ~`item
+  expand: (description, body) ->
+    `(#external describe)
+      ~`description
       () -> ~`body
 
 #defmacro 'it'
   binaryKeyword
   KEY
-  expand: (item, body) ->
-    `it
-      ~`item
+  expand: (description, body) ->
+    `(#external it)
+      ~`description
       () -> ~`body
 
 describe 'Metascript' (
