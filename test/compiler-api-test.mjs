@@ -24,8 +24,10 @@ describe '#compilerFromString'
   it 'should inherit options set at the meta level'
     var custom-mjs = Meta()
     custom-mjs.options.full-macro-errors = true
+    custom-mjs.options.emit-identifier-statements = true
     var compiler = custom-mjs.compiler-from-string ''
     compiler.options.full-macro-errors.should.equal true
+    compiler.options.emit-identifier-statements.should.equal true
 
   describe 'options.allowUndeclaredIdentifiers'
 
