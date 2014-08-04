@@ -2,21 +2,7 @@ require('source-map-support').install()
 
 require 'should'
 
-#defmacro 'describe'
-  binaryKeyword
-  KEY
-  expand: (description, body) ->
-    `(#external describe)
-      ~`description
-      () -> ~`body
-
-#defmacro 'it'
-  binaryKeyword
-  KEY
-  expand: (description, body) ->
-    `(#external it)
-      ~`description
-      () -> ~`body
+#metaimport './lib/testing'
 
 describe 'Metascript' (
 
