@@ -16,14 +16,20 @@ true
 42
 42
 true
+true
+42
+true
+42
 '''
 
 var o = {
   p42: 42
   p-null: null
+  f: #-> 42
   o: {
     p42: 42
     p-null: null
+    f: #-> 42
   }
 }
 
@@ -49,3 +55,8 @@ console.log(o.?p-null.?k == null)
 console.log(o.p42 ?? false)
 console.log(o.k ?? 42)
 console.log((o.p-null ?? 42) == null)
+
+console.log((o.?p-null<-?()) == undefined)
+console.log(o.?f<-?())
+console.log((o.?k<-?()) == undefined)
+console.log(o.?o.?f<-?())
