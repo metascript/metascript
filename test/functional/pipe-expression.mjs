@@ -6,7 +6,9 @@
 42
 42
 42
+42
 '''
+
 var o = {
   p42: 42
   m42: #-> @p42
@@ -43,6 +45,12 @@ console.log <- |:
   mo
   m42
 
+console.log <- |:
+  o
+  mo()
+  mo()
+  m42()
+
 
 console.log
   |:
@@ -52,14 +60,16 @@ console.log
 
 console.log
   |:
-    2 * (twenty:)
-    # + (two:)
-    twenty: 20
-    two: 2
+    2 * #twenty
+    # + #two
+    #where
+      #twenty = 20
+      #two = 2
 
 console.log
   |:
-    (two:) * (twenty:)
-    # + (two:)
-    twenty: 20
-    two: 2
+    #two * #twenty
+    # + #two
+    #where
+      #twenty = 20
+      #two = 2
