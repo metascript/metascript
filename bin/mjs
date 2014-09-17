@@ -10,7 +10,7 @@ function subcommand(command, argv) {
   try {
     command = requireCwd(pkg + '/mjs');
   } catch (e) {
-    console.error('Package "' + pkg + '" not found or is not a subcommand');
+    console.error('Package "' + pkg + '" not found or is not a subcommand', e);
     return 1;
   }
   if (typeof command !== 'function') {
