@@ -13,6 +13,9 @@ var files = {
   'coremacros': [
     './lib/core-macros.mjs'
   ],
+  'testlib': [
+    'test/lib/*.mjs'
+  ],
   'test': [
     'test/node_modules/test-metaimport/*.mjs',
     'test/*.mjs'
@@ -52,11 +55,19 @@ gulp.task('build', ['compiler', 'coremacros'], function (done) {
   done();
 });
 
-gulp.task('build-tests', ['build'], function () {
-  return gulp.src(files.test)
-  .pipe(cache('tests'))
+function mjs(src, cacheName) {
+  return gulp.src(src)
+  .pipe(cache(cacheName))
   .pipe(exec('./bin/mjs <%= file.path %>'))
-  .pipe(exec.reporter())
+  .pipe(exec.reporter());
+}
+
+gulp.task('build-testlib', ['build'], function () {
+  return mjs(files.testlib, 'tests');
+});
+
+gulp.task('build-tests', ['build-testlib', 'build'], function () {
+  return mjs(files.test, 'tests');
 });
 
 gulp.task('test', ['build-tests'], function () {

@@ -1,26 +1,8 @@
 require('source-map-support').install()
 
-#external
-  describe
-  it
-
 require 'should'
 
-#defmacro 'describe'
-  binaryKeyword
-  KEY
-  expand: (item, body) ->
-    `describe
-      ~`item
-      () -> ~`body
-
-#defmacro 'it'
-  binaryKeyword
-  KEY
-  expand: (item, body) ->
-    `it
-      ~`item
-      () -> ~`body
+#metaimport './lib/testing'
 
 describe 'Metascript' (
 
@@ -609,6 +591,15 @@ it 'Can import macro modules'
 it 'Can import npm macro modules'
   #metaimport 'test-metaimport'
   (3kg).should.equal 3000
+  
+it 'Can import multiple macro modules at once'
+  #metaimport
+    './meta-module'
+    './meta-module-2'
+
+  var obj = {a: 21}
+  obj.ltuae = () -> #d-double @%^a
+  obj.ltuae().should.equal 42
 
 it 'Has a threading operator'
   var obj = {
@@ -677,7 +668,7 @@ it 'Does not expand quoted code'
   x.should.equal 2
 
 it 'Can use imported macros in macros'
-  #metaimport './meta-module'
+  #metaimport './meta-module-2'
   #defmacro #q-quadruple
     unary
     HIGH

@@ -5,5 +5,6 @@ lib/compiler/*.js*
 test/functional-test.js*
 test/meta-module.js*
 test/meta-test.js*
+test/functional/*.js*
 TMP*.*
 LOG*.*
