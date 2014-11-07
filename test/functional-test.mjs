@@ -27,8 +27,8 @@ var compileAndAssert = (fname) ->
 
   ; Extract options from modeline
   if (code.substring(0, 6) == '; mjs:') do
-    var line = code.substr(6, code.indexOf '\n')
-    var modearg = new RegExp('\\s*([\\w\\d]+)(\\s*=\\s*([\\w\\d]+))?\\s*,?', 'g')
+    var line = code.substr(6, code.indexOf "\n")
+    var modearg = new RegExp('\s*([\w\d]+)(\s*=\s*([\w\d]+))?\s*,?', 'g')
     line.replace
       modearg
       (m0, m1, m2, m3) ->
@@ -50,10 +50,10 @@ var compileAndAssert = (fname) ->
 
   var ast = compiler.produceAst()
   if compiler.errors.length > 0 do
-    throw {name: 'CompilerError', message: compiler.errors.join('\n')}
+    throw {name: 'CompilerError', message: compiler.errors.join("\n")}
   
-  var expected = compiler.root.__doc__
-  expected.should.be.type('string')
+  var expected = compiler.root.get('doc')
+  console.assert(typeof expected == 'string', 'Testcase does not have a docblock')
   expected = expected.trim()
 
   var result = compiler.generate ast
@@ -62,14 +62,14 @@ var compileAndAssert = (fname) ->
 
   try do
     vm.runInThisContext
-      '(function (console) {' + result.code + '\n})(mockedConsole)'
+      "(function (console) {" + result.code + "\n})(mockedConsole)"
       fname
 
-    expected.should.equal( mocked-console.output.join('\n') )
+    expected.should.equal( mocked-console.output.join("\n") )
   catch (var e) do
     if process.env.VERBOSE do
       console.log('')
-      console.log(fname + '\n' + (new Array(fname.length)).join('=') + '=\n')
+      console.log(fname + "\n" + (new Array(fname.length)).join('=') + "=\n")
       console.log(compiler.root.printAst())
       console.log('')
       console.log(result.code)
