@@ -20,14 +20,14 @@ console.log(lambda2(10))
 var caller = fn -> fn()
 var caller-with-arg = (x, fn) -> fn(x)
 
-console.log caller \\ 'foo' + 'bar'
+console.log( caller \\ 'foo' + 'bar' )
 
 caller \\
   var x = 10
   console.log <- 'x is ' + x
 
 ; empty lambda serves as identity
-console.log caller-with-arg('identity implicit') \\
+console.log( caller-with-arg('identity implicit') \\ )
 
 ; which is equivalent to this
-console.log caller-with-arg('identity explicit') \\ #it
+console.log( caller-with-arg('identity explicit') \\ #it )
