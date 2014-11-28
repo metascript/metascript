@@ -1,7 +1,7 @@
 '''
 function
 30
-20
+100
 foobar
 x is 10
 identity implicit
@@ -12,7 +12,7 @@ console.log(typeof \\ 1 + 1)
 
 ; placeholder on expressions is autocompleted with argument
 var lambda1 = \\ #1 + #2
-var lambda2 = \\ * 2
+var lambda2 = \\ *
 
 console.log(lambda1(10, 20))
 console.log(lambda2(10))
