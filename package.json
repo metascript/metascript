@@ -19,7 +19,8 @@
     "colors": "0.6.2",
     "parentpath": "0.2.0",
     "pretty-hrtime": "0.2.1",
-    "regenerator": "0.4.8"
+    "regenerator": "0.4.8",
+    "xregexp": "2.0.0"
   },
   "devDependencies": {
     "meta-script": "=0.0.41",
