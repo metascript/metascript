@@ -51,9 +51,9 @@ var compileAndAssert = (fname) ->
   var ast = compiler.produceAst()
   if compiler.errors.length > 0 do
     throw {name: 'CompilerError', message: compiler.errors.join("\n")}
-  
+
   var expected = compiler.root.get('doc')
-  console.assert(typeof expected == 'string', 'Testcase does not have a docblock')
+  console.assert(typeof expected == 'string', 'Testcase "' + fname + '" does not have a docblock')
   expected = expected.trim()
 
   var result = compiler.generate ast
@@ -82,7 +82,7 @@ describe
     var path = __dirname + '/functional/'
     fs.readdirSync(path).forEach #->
       if (#it.substr(-4) != '.mjs') return
-      
+
       var fpath = path + #it
       it(#it.substr(0, #it.length - 4), #->
         compileAndAssert fpath
