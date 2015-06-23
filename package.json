@@ -19,10 +19,9 @@
     "colors": "0.6.2",
     "parentpath": "0.2.0",
     "pretty-hrtime": "0.2.1",
-    "regenerator": "0.4.8"
+    "regenerator": "0.8.30"
   },
   "devDependencies": {
-    "meta-script": "=0.0.41",
     "gulp": "^3.8.1",
     "gulp-cached": "0.0.3",
     "gulp-exec": "^2.0.1",

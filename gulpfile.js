@@ -91,20 +91,18 @@ gulp.task('regenerator', function (done) {
   // HACK: Use recast from regenerator's deps
   var recast = require('regenerator/node_modules/recast');
 
-  var runtime = fs.readFileSync(regenerator.runtime.min, "utf-8");
+  var runtime = fs.readFileSync('node_modules/regenerator/runtime.js', "utf-8");
   var body = recast.parse(runtime, {
     sourceFileName: regenerator.runtime.min,
   }).program.body;
 
   // Reduce source maps size by removing location information
-  var StripLoc = recast.Visitor.extend({
-    visit: function (node) {
-      this.genericVisit(node);
-      node.loc = null;
-      return node;
+  recast.visit(body, {
+    visitNode: function (path) {
+      path.node.loc = null;
+      this.traverse(path);
     }
   });
-  (new StripLoc).visit(body);
 
   fs.writeFileSync('./lib/regenerator-runtime.json', JSON.stringify(body[0]))
 
