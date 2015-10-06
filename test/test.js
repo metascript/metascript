@@ -53,6 +53,8 @@ var compareArray = function (printer, compiler, expected, errors) {
       var current = errors[j];
       if (e.line === current.line &&
           e.column === current.column &&
+          (current.lineTo !== undefined ? (e.lineTo === current.lineTo) : true) &&
+          (current.columnTo !== undefined ? (e.columnTo === current.columnTo) : true) &&
           e.message.indexOf(current.message) >= 0) {
         found = true;
         break;
@@ -254,6 +256,8 @@ describe('Meta.Compiler', function () {
         {
           line: 1,
           column: 7,
+          lineTo: 1,
+          columnTo: 7,
           message: 'Misplaced close'
         },
         {
@@ -740,4 +744,3 @@ describe('Meta.Compiler', function () {
 
   });
 });
-
