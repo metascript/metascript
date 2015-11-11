@@ -17,6 +17,7 @@ var files = {
     'test/lib/*.mjs'
   ],
   'test': [
+    'test/node_modules/test-metaimport/*.mjs',
     'test/*.mjs'
   ]
 };
