@@ -671,6 +671,7 @@ it 'Can use imported macros in macros'
     expand: (arg) -> `2 * #d-double ~`arg
   (#q-quadruple 1).should.equal 4
 
+'''
 it 'Can redefine builtins'
   #meta
     var inspect = (require 'util').inspect
@@ -691,6 +692,7 @@ it 'Can redefine builtins'
     null
   var p = 'P'
   ({p}.p).should.equal 'P'
+'''
 
 it 'Can handle complex loops'
   var complex-loop = start ->
